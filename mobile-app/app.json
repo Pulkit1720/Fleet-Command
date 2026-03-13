@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Fleet Command",
+    "slug": "fleet-command-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fleetcommand.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Fleet Command needs your location to verify you are on-site for jobs.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Fleet Command needs your location to verify you are on-site for jobs."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.fleetcommand.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Fleet Command to use your location for job verification."
+        }
+      ]
+    ],
+    "scheme": "fleetcommand"
+  }
+}
