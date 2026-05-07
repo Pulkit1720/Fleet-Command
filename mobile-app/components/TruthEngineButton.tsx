@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Job, Location } from '../lib/types';
 import { getCurrentLocation, calculateDistance, formatDistance } from '../lib/location';
 import { updateJobStatus } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 interface TruthEngineButtonProps {
     job: Job;
@@ -13,6 +14,7 @@ interface TruthEngineButtonProps {
 const GEOFENCE_RADIUS = 200; // meters
 
 export default function TruthEngineButton({ job, onStatusUpdate }: TruthEngineButtonProps) {
+    const { technician } = useAuth();
     const [location, setLocation] = useState<Location | null>(null);
     const [distance, setDistance] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,12 +61,13 @@ export default function TruthEngineButton({ job, onStatusUpdate }: TruthEngineBu
     };
 
     const handleStartJob = async () => {
-        if (!location || !canStartJob) return;
+        if (!location || !canStartJob || !technician) return;
         setIsLoading(true);
         setError(null);
         try {
             const updatedJob = await updateJobStatus(
                 job.id,
+                technician.id,
                 'In Progress',
                 location.latitude,
                 location.longitude
@@ -78,12 +81,13 @@ export default function TruthEngineButton({ job, onStatusUpdate }: TruthEngineBu
     };
 
     const handleCompleteJob = async () => {
-        if (!location || !canCompleteJob) return;
+        if (!location || !canCompleteJob || !technician) return;
         setIsLoading(true);
         setError(null);
         try {
             const updatedJob = await updateJobStatus(
                 job.id,
+                technician.id,
                 'Completed',
                 location.latitude,
                 location.longitude

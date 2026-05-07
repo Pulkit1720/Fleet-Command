@@ -52,7 +52,7 @@ export function getJobTypeColor(jobType: string): string {
   switch (jobType) {
     case 'Repair':
       return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'New Install':
+    case 'Install':
       return 'bg-emerald-100 text-emerald-800 border-emerald-200';
     case 'Ongoing Install':
       return 'bg-cyan-100 text-cyan-800 border-cyan-200';

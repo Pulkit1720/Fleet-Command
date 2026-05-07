@@ -1,13 +1,20 @@
 import { Job, GeofenceCheck } from './types';
+import { supabase } from './supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
-const TECHNICIAN_ID = process.env.EXPO_PUBLIC_TECHNICIAN_ID;
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  // Attach Supabase session token if available
+  const { data: { session } } = await supabase.auth.getSession();
+  const authHeader = session?.access_token
+    ? { Authorization: `Bearer ${session.access_token}` }
+    : {};
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeader,
       ...options?.headers,
     },
   });
@@ -21,8 +28,12 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 }
 
 // Get technician's jobs sorted by distance
-export async function getMyJobs(lat?: number, lng?: number): Promise<{ jobs: Job[] }> {
-  let endpoint = `/technicians/${TECHNICIAN_ID}/jobs`;
+export async function getMyJobs(
+  technicianId: string,
+  lat?: number,
+  lng?: number
+): Promise<{ jobs: Job[] }> {
+  let endpoint = `/technicians/${technicianId}/jobs`;
   if (lat && lng) {
     endpoint += `?lat=${lat}&lng=${lng}`;
   }
@@ -46,6 +57,7 @@ export async function checkGeofence(
 // Update job status with location verification
 export async function updateJobStatus(
   jobId: string,
+  technicianId: string,
   status: string,
   techLat: number,
   techLng: number
@@ -54,7 +66,7 @@ export async function updateJobStatus(
     method: 'POST',
     body: JSON.stringify({
       status,
-      technician_id: TECHNICIAN_ID,
+      technician_id: technicianId,
       tech_lat: techLat,
       tech_lng: techLng,
       device_info: {
@@ -66,8 +78,12 @@ export async function updateJobStatus(
 }
 
 // Update technician location
-export async function updateMyLocation(lat: number, lng: number): Promise<void> {
-  await fetchApi(`/technicians/${TECHNICIAN_ID}/location`, {
+export async function updateMyLocation(
+  technicianId: string,
+  lat: number,
+  lng: number
+): Promise<void> {
+  await fetchApi(`/technicians/${technicianId}/location`, {
     method: 'POST',
     body: JSON.stringify({ lat, lng }),
   });

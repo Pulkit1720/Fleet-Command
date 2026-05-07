@@ -2,6 +2,55 @@ import supabase from '../config/supabase.js';
 import { geocodeAddress, autocompleteAddress } from '../services/geocodingService.js';
 import { logTruthEntry, isWithinGeofence, getJobTruthLogs } from '../services/truthEngineService.js';
 
+function minutesToTimeValue(minutes) {
+    const parsedMinutes = Number(minutes);
+
+    if (!Number.isFinite(parsedMinutes) || parsedMinutes <= 0) {
+        return null;
+    }
+
+    const hours = Math.floor(parsedMinutes / 60)
+        .toString()
+        .padStart(2, '0');
+    const remainingMinutes = Math.round(parsedMinutes % 60)
+        .toString()
+        .padStart(2, '0');
+
+    return `${hours}:${remainingMinutes}:00`;
+}
+
+function timeValueToMinutes(timeValue) {
+    if (timeValue == null) {
+        return null;
+    }
+
+    if (typeof timeValue === 'number') {
+        return timeValue;
+    }
+
+    const parts = String(timeValue).split(':').map((part) => Number(part));
+    if (parts.length < 2 || parts.some((part) => Number.isNaN(part))) {
+        return null;
+    }
+
+    const [hours, minutes, seconds = 0] = parts;
+    return hours * 60 + minutes + Math.round(seconds / 60);
+}
+
+function normalizeJobRecord(job) {
+    if (!job) {
+        return job;
+    }
+
+    return {
+        ...job,
+        estimated_duration_minutes: timeValueToMinutes(job.estimated_duration_minutes),
+    };
+}
+
+const TECH_JOIN = 'assigned_technician(id, full_name, email, phone)';
+const TECH_JOIN_AVATAR = 'assigned_technician(id, full_name, email, phone, avatar_url)';
+
 // Get all jobs with optional filters
 export async function getJobs(req, res, next) {
     try {
@@ -16,16 +65,13 @@ export async function getJobs(req, res, next) {
 
         let query = supabase
             .from('jobs')
-            .select(`
-        *,
-        assigned_technician:technicians(id, full_name, email, phone)
-      `, { count: 'exact' })
+            .select(`*, ${TECH_JOIN}`, { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
         if (status) query = query.eq('status', status);
         if (priority) query = query.eq('priority', priority);
-        if (technician_id) query = query.eq('assigned_technician_id', technician_id);
+        if (technician_id) query = query.eq('assigned_technician', technician_id);
         if (date) query = query.eq('scheduled_date', date);
 
         const { data, error, count } = await query;
@@ -33,7 +79,7 @@ export async function getJobs(req, res, next) {
         if (error) throw error;
 
         res.json({
-            jobs: data,
+            jobs: data.map(normalizeJobRecord),
             total: count,
             limit: parseInt(limit),
             offset: parseInt(offset)
@@ -50,16 +96,13 @@ export async function getJob(req, res, next) {
 
         const { data, error } = await supabase
             .from('jobs')
-            .select(`
-        *,
-        assigned_technician:technicians(id, full_name, email, phone, avatar_url)
-      `)
+            .select(`*, ${TECH_JOIN_AVATAR}`)
             .eq('id', id)
             .single();
 
         if (error) throw error;
 
-        res.json(data);
+        res.json(normalizeJobRecord(data));
     } catch (error) {
         next(error);
     }
@@ -78,7 +121,7 @@ export async function createJob(req, res, next) {
             site_address,
             lat,
             lng,
-            assigned_technician_id,
+            assigned_technician_id,   // frontend sends this name
             scheduled_date,
             scheduled_time_start,
             scheduled_time_end,
@@ -86,7 +129,6 @@ export async function createJob(req, res, next) {
             notes
         } = req.body;
 
-        // Geocode address if lat/lng not provided
         let finalLat = lat;
         let finalLng = lng;
         let finalAddress = site_address;
@@ -111,22 +153,19 @@ export async function createJob(req, res, next) {
                 site_address: finalAddress,
                 lat: finalLat,
                 lng: finalLng,
-                assigned_technician_id,
+                assigned_technician: assigned_technician_id || null,  // DB column name
                 scheduled_date,
                 scheduled_time_start,
                 scheduled_time_end,
-                estimated_duration_minutes,
+                estimated_duration_minutes: minutesToTimeValue(estimated_duration_minutes),
                 notes
             })
-            .select(`
-        *,
-        assigned_technician:technicians(id, full_name, email, phone)
-      `)
+            .select(`*, ${TECH_JOIN}`)
             .single();
 
         if (error) throw error;
 
-        res.status(201).json(data);
+        res.status(201).json(normalizeJobRecord(data));
     } catch (error) {
         next(error);
     }
@@ -136,9 +175,18 @@ export async function createJob(req, res, next) {
 export async function updateJob(req, res, next) {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const updates = { ...req.body };
 
-        // If address changed, re-geocode
+        // Map frontend field name to DB column name
+        if ('assigned_technician_id' in updates) {
+            updates.assigned_technician = updates.assigned_technician_id || null;
+            delete updates.assigned_technician_id;
+        }
+
+        if (updates.estimated_duration_minutes !== undefined) {
+            updates.estimated_duration_minutes = minutesToTimeValue(updates.estimated_duration_minutes);
+        }
+
         if (updates.site_address && !updates.lat && !updates.lng) {
             const geocoded = await geocodeAddress(updates.site_address);
             updates.lat = geocoded.lat;
@@ -150,15 +198,12 @@ export async function updateJob(req, res, next) {
             .from('jobs')
             .update(updates)
             .eq('id', id)
-            .select(`
-        *,
-        assigned_technician:technicians(id, full_name, email, phone)
-      `)
+            .select(`*, ${TECH_JOIN}`)
             .single();
 
         if (error) throw error;
 
-        res.json(data);
+        res.json(normalizeJobRecord(data));
     } catch (error) {
         next(error);
     }
@@ -170,7 +215,6 @@ export async function updateJobStatus(req, res, next) {
         const { id } = req.params;
         const { status, technician_id, tech_lat, tech_lng, device_info } = req.body;
 
-        // Get job details
         const { data: job, error: jobError } = await supabase
             .from('jobs')
             .select('*')
@@ -179,7 +223,6 @@ export async function updateJobStatus(req, res, next) {
 
         if (jobError) throw jobError;
 
-        // For status changes that require presence verification
         const requiresVerification = ['In Progress', 'Completed'].includes(status);
 
         if (requiresVerification && tech_lat && tech_lng) {
@@ -191,7 +234,6 @@ export async function updateJobStatus(req, res, next) {
                 job.geofence_radius_meters
             );
 
-            // Log the truth entry
             await logTruthEntry({
                 jobId: id,
                 technicianId: technician_id,
@@ -204,7 +246,6 @@ export async function updateJobStatus(req, res, next) {
                 deviceInfo: device_info
             });
 
-            // Return error if not within geofence (but still log the attempt)
             if (!geofenceCheck.isWithin) {
                 return res.status(403).json({
                     error: 'Geofence verification failed',
@@ -215,7 +256,6 @@ export async function updateJobStatus(req, res, next) {
             }
         }
 
-        // Update timestamps based on status
         const updateData = { status };
         if (status === 'In Progress') {
             updateData.actual_start_time = new Date().toISOString();
@@ -227,15 +267,12 @@ export async function updateJobStatus(req, res, next) {
             .from('jobs')
             .update(updateData)
             .eq('id', id)
-            .select(`
-        *,
-        assigned_technician:technicians(id, full_name, email, phone)
-      `)
+            .select(`*, ${TECH_JOIN}`)
             .single();
 
         if (error) throw error;
 
-        res.json(data);
+        res.json(normalizeJobRecord(data));
     } catch (error) {
         next(error);
     }

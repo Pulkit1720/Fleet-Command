@@ -8,7 +8,25 @@ import { Technician, JobType, JobPriority, AddressSuggestion } from '@/types';
 import AddressAutocomplete from './AddressAutocomplete';
 import Button from '@/components/ui/Button';
 
-const JOB_TYPES: JobType[] = ['Repair', 'New Install', 'Ongoing Install', 'Maintenance', 'Inspection'];
+type JobFormData = {
+    client_name: string;
+    client_phone: string;
+    client_email: string;
+    job_type: JobType;
+    priority: JobPriority;
+    description: string;
+    site_address: string;
+    lat: number | null;
+    lng: number | null;
+    assigned_technician_id: string;
+    scheduled_date: string;
+    scheduled_time_start: string;
+    scheduled_time_end: string;
+    estimated_duration_minutes: number;
+    notes: string;
+};
+
+const JOB_TYPES: JobType[] = ['Repair', 'Install', 'Ongoing Install', 'Maintenance', 'Inspection'];
 const PRIORITIES: JobPriority[] = ['Low', 'Normal', 'Emergency'];
 
 export default function JobForm() {
@@ -17,7 +35,7 @@ export default function JobForm() {
     const [technicians, setTechnicians] = useState<Technician[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<JobFormData>({
         client_name: '',
         client_phone: '',
         client_email: '',
@@ -43,9 +61,15 @@ export default function JobForm() {
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const nextValue =
+            name === 'estimated_duration_minutes' ? Number(value) : value;
+
+        setFormData((prev) => ({ ...prev, [name]: nextValue }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
+        }
+        if (errors.submit) {
+            setErrors((prev) => ({ ...prev, submit: '' }));
         }
     };
 
@@ -80,7 +104,10 @@ export default function JobForm() {
             router.push('/');
         } catch (err) {
             console.error('Create job error:', err);
-            setErrors({ submit: 'Failed to create job. Please try again.' });
+            const message = err instanceof Error && err.message
+                ? err.message
+                : 'Failed to create job. Please try again.';
+            setErrors({ submit: message });
         } finally {
             setIsSubmitting(false);
         }
@@ -108,8 +135,8 @@ export default function JobForm() {
                             value={formData.client_name}
                             onChange={handleChange}
                             className={`h-11 w-full rounded-lg border px-4 text-sm focus:outline-none focus:ring-2 ${errors.client_name
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                    : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
+                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
                                 }`}
                         />
                         {errors.client_name && (
@@ -238,8 +265,8 @@ export default function JobForm() {
                             value={formData.scheduled_date}
                             onChange={handleChange}
                             className={`h-11 w-full rounded-lg border px-4 text-sm focus:outline-none focus:ring-2 ${errors.scheduled_date
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                    : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
+                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                                : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
                                 }`}
                         />
                         {errors.scheduled_date && (

@@ -11,29 +11,29 @@ import { useRouter } from 'expo-router';
 import { Job } from '../../lib/types';
 import { getMyJobs, updateMyLocation } from '../../lib/api';
 import { getCurrentLocation } from '../../lib/location';
+import { useAuth } from '../../context/AuthContext';
 import JobCard from '../../components/JobCard';
 
 export default function ScheduleScreen() {
   const router = useRouter();
+  const { technician } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
+    if (!technician) return;
     try {
       setError(null);
       const location = await getCurrentLocation();
 
       if (location) {
-        // Update technician's current location on backend
-        await updateMyLocation(location.latitude, location.longitude).catch(() => { });
-        // Fetch jobs sorted by distance
-        const data = await getMyJobs(location.latitude, location.longitude);
+        await updateMyLocation(technician.id, location.latitude, location.longitude).catch(() => { });
+        const data = await getMyJobs(technician.id, location.latitude, location.longitude);
         setJobs(data.jobs);
       } else {
-        // Fetch without distance sorting
-        const data = await getMyJobs();
+        const data = await getMyJobs(technician.id);
         setJobs(data.jobs);
       }
     } catch (err: any) {
@@ -43,7 +43,7 @@ export default function ScheduleScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [technician]);
 
   useEffect(() => {
     fetchJobs();

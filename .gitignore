@@ -1,3 +1,6 @@
 .env
 node_modules/
 .next
+.claude
+.cursor
+.expo

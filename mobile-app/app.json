@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0f172a"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fleetcommand.mobile",
@@ -28,7 +30,9 @@
       "package": "com.fleetcommand.mobile",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -40,6 +44,12 @@
         }
       ]
     ],
-    "scheme": "fleetcommand"
+    "scheme": "fleetcommand",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b5c1b5e9-cd06-48c5-8763-911dde1707f8"
+      }
+    }
   }
 }

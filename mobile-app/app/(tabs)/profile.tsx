@@ -1,32 +1,47 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
+import React from 'react';
 
 export default function ProfileScreen() {
+    const { technician, signOut } = useAuth();
+
+    const handleSignOut = () => {
+        Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Sign Out', style: 'destructive', onPress: signOut },
+        ]);
+    };
+
+    const initials = technician?.full_name
+        ? technician.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+        : '?';
+
     return (
         <View style={styles.container}>
             {/* Avatar */}
             <View style={styles.avatarSection}>
                 <View style={styles.avatar}>
-                    <Ionicons name="person" size={40} color="#94a3b8" />
+                    <Text style={styles.avatarText}>{initials}</Text>
                 </View>
-                <Text style={styles.name}>John Smith</Text>
-                <Text style={styles.role}>Field Technician</Text>
+                <Text style={styles.name}>{technician?.full_name ?? 'Technician'}</Text>
+                <Text style={styles.role}>{technician?.email ?? ''}</Text>
             </View>
 
             {/* Stats */}
             <View style={styles.statsRow}>
                 <View style={styles.statItem}>
-                    <Text style={styles.statValue}>24</Text>
+                    <Text style={styles.statValue}>—</Text>
                     <Text style={styles.statLabel}>Completed</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                    <Text style={styles.statValue}>98%</Text>
+                    <Text style={styles.statValue}>—</Text>
                     <Text style={styles.statLabel}>On-Site Rate</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                    <Text style={styles.statValue}>4.9</Text>
+                    <Text style={styles.statValue}>—</Text>
                     <Text style={styles.statLabel}>Rating</Text>
                 </View>
             </View>
@@ -37,7 +52,7 @@ export default function ProfileScreen() {
                 <MenuItem icon="location-outline" label="Location Settings" />
                 <MenuItem icon="document-text-outline" label="Job History" />
                 <MenuItem icon="help-circle-outline" label="Help & Support" />
-                <MenuItem icon="log-out-outline" label="Sign Out" isDestructive />
+                <MenuItem icon="log-out-outline" label="Sign Out" isDestructive onPress={handleSignOut} />
             </View>
         </View>
     );
@@ -47,13 +62,15 @@ function MenuItem({
     icon,
     label,
     isDestructive = false,
+    onPress,
 }: {
     icon: string;
     label: string;
     isDestructive?: boolean;
+    onPress?: () => void;
 }) {
     return (
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7} onPress={onPress}>
             <Ionicons
                 name={icon as any}
                 size={22}
@@ -88,10 +105,15 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: '#2563eb',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 12,
+    },
+    avatarText: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#fff',
     },
     name: {
         fontSize: 20,

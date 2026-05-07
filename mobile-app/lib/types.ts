@@ -1,4 +1,4 @@
-export type JobType = 'Repair' | 'New Install' | 'Ongoing Install' | 'Maintenance' | 'Inspection';
+export type JobType = 'Repair' | 'Install' | 'Ongoing Install' | 'Maintenance' | 'Inspection';
 export type JobPriority = 'Low' | 'Normal' | 'Emergency';
 export type JobStatus = 'Unassigned' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
 

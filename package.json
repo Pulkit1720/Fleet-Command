@@ -1,0 +1,10 @@
+{
+  "name": "fleetcommand-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web-admin run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:mobile": "npm --prefix mobile-app start",
+    "dev:web": "npm --prefix web-admin run dev"
+  }
+}

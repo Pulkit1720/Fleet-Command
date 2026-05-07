@@ -14,29 +14,29 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
             name: 'Active Jobs',
             value: stats ? stats.in_progress_count + stats.assigned_count : 0,
             icon: ClipboardList,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
+            gradient: 'from-blue-600 to-blue-500',
+            iconBg: 'bg-white/20',
         },
         {
             name: 'Pending',
             value: stats?.unassigned_count ?? 0,
             icon: Clock,
-            color: 'text-amber-600',
-            bgColor: 'bg-amber-50',
+            gradient: 'from-amber-500 to-orange-400',
+            iconBg: 'bg-white/20',
         },
         {
             name: 'Emergency',
             value: stats?.emergency_count ?? 0,
             icon: AlertTriangle,
-            color: 'text-red-600',
-            bgColor: 'bg-red-50',
+            gradient: 'from-red-600 to-rose-500',
+            iconBg: 'bg-white/20',
         },
         {
             name: 'Completed Today',
             value: stats?.completed_count ?? 0,
             icon: CheckCircle,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
+            gradient: 'from-emerald-600 to-green-500',
+            iconBg: 'bg-white/20',
         },
     ];
 
@@ -45,19 +45,21 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
             {cards.map((card) => (
                 <div
                     key={card.name}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-5 shadow-lg`}
                 >
-                    <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${card.bgColor}`}>
-                            <card.icon className={`h-5 w-5 ${card.color}`} />
-                        </div>
+                    <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-sm text-slate-500">{card.name}</p>
-                            <p className="text-2xl font-semibold text-slate-900">
-                                {isLoading ? '-' : card.value}
+                            <p className="text-sm font-medium text-white/80">{card.name}</p>
+                            <p className="mt-1 text-4xl font-bold text-white">
+                                {isLoading ? '—' : card.value}
                             </p>
                         </div>
+                        <div className={`rounded-xl ${card.iconBg} p-2.5`}>
+                            <card.icon className="h-5 w-5 text-white" />
+                        </div>
                     </div>
+                    {/* subtle shine */}
+                    <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
                 </div>
             ))}
         </div>

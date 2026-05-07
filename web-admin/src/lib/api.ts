@@ -88,3 +88,14 @@ export async function getTechnicians(): Promise<Technician[]> {
 export async function getTechnician(id: string): Promise<Technician> {
   return fetchApi(`/technicians/${id}`);
 }
+
+export async function inviteTechnician(data: {
+  full_name: string;
+  email: string;
+  phone?: string;
+}): Promise<Technician> {
+  return fetchApi('/technicians/invite', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

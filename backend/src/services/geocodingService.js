@@ -6,7 +6,7 @@ const MAPBOX_TOKEN = process.env.MAPBOX_ACCESS_TOKEN;
 
 export async function geocodeAddress(address) {
     if (!MAPBOX_TOKEN) {
-        throw new Error('Mapbox access could not be configured');
+        return { lat: null, lng: null, formattedAddress: address };
     }
     const encodedaddress = encodeURIComponent(address);
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedaddress}.json?access_token=${MAPBOX_TOKEN}&limit=1`;

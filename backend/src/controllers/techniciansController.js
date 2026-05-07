@@ -69,6 +69,63 @@ export async function updateLocation(req, res, next) {
   }
 }
 
+// Invite a new technician via email
+export async function inviteTechnician(req, res, next) {
+  try {
+    const { full_name, email, phone } = req.body;
+
+    if (!full_name || !email) {
+      return res.status(400).json({ error: 'full_name and email are required' });
+    }
+
+    // Check if technician with this email already exists
+    const { data: existing } = await supabase
+      .from('technicians')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existing) {
+      return res.status(409).json({ error: 'A technician with this email already exists' });
+    }
+
+    // Redirect technicians to their own setup page (not the admin set-password page)
+    const webAdminUrl = process.env.WEB_ADMIN_URL || 'http://localhost:3000';
+    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+      data: { full_name },
+      redirectTo: `${webAdminUrl}/auth/confirm?next=/technician/setup`,
+    });
+
+    if (inviteError) {
+      if (inviteError.message?.toLowerCase().includes('rate limit') || inviteError.status === 429) {
+        return res.status(429).json({
+          error: 'Email rate limit reached. Configure a custom SMTP provider in Supabase to remove this limit.',
+        });
+      }
+      throw inviteError;
+    }
+
+    // Create technician record linked to the new auth user
+    const { data: technician, error: techError } = await supabase
+      .from('technicians')
+      .insert({
+        user_id: inviteData.user.id,
+        full_name,
+        email,
+        phone: phone || null,
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (techError) throw techError;
+
+    res.status(201).json(technician);
+  } catch (error) {
+    next(error);
+  }
+}
+
 // Get jobs for a technician sorted by distance
 export async function getTechnicianJobs(req, res, next) {
   try {
@@ -88,7 +145,7 @@ export async function getTechnicianJobs(req, res, next) {
     const { data: jobs, error: jobsError } = await supabase
       .from('jobs')
       .select('*')
-      .eq('assigned_technician_id', id)
+      .eq('assigned_technician', id)
       .in('status', ['Assigned', 'In Progress'])
       .order('scheduled_date');
 

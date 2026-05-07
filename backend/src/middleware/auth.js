@@ -15,7 +15,7 @@ export async function authenticate(req, res, next) {
     try {
         const supabase = createClient(
             process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_key,
+            process.env.SUPABASE_ANON_KEY,
             {
                 global: {
                     headers: { Authorization: `Bearer ${token} ` }
