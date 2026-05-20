@@ -78,7 +78,7 @@ export async function inviteTechnician(req, res, next) {
       return res.status(400).json({ error: 'full_name and email are required' });
     }
 
-    // Check if technician with this email already exists
+    // Check if a completed technician record already exists
     const { data: existing } = await supabase
       .from('technicians')
       .select('id')
@@ -89,27 +89,22 @@ export async function inviteTechnician(req, res, next) {
       return res.status(409).json({ error: 'A technician with this email already exists' });
     }
 
-    // Redirect technicians to their own setup page (not the admin set-password page)
-    const webAdminUrl = process.env.WEB_ADMIN_URL || 'http://localhost:3000';
+    const webAdminUrl = process.env.WEB_ADMIN_URL || 'http://localhost:8080';
+
+    // inviteUserByEmail sends the email via Supabase's own provider (no Gmail needed)
+    // and gracefully handles re-inviting an existing auth user
     const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { full_name },
-      redirectTo: `${webAdminUrl}/auth/confirm?next=/technician/setup`,
+      data: { full_name, role: 'technician' },
+      redirectTo: `${webAdminUrl}/auth/confirm`,
     });
 
-    if (inviteError) {
-      if (inviteError.message?.toLowerCase().includes('rate limit') || inviteError.status === 429) {
-        return res.status(429).json({
-          error: 'Email rate limit reached. Configure a custom SMTP provider in Supabase to remove this limit.',
-        });
-      }
-      throw inviteError;
-    }
+    if (inviteError) throw inviteError;
 
     // Create technician record linked to the new auth user
     const { data: technician, error: techError } = await supabase
       .from('technicians')
       .insert({
-        user_id: inviteData.user.id,
+        user_id: inviteData.user?.id,
         full_name,
         email,
         phone: phone || null,

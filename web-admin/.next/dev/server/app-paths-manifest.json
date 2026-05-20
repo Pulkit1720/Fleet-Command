@@ -1,8 +1,4 @@
 {
-  "/(dashboard)/create-job/page": "app/(dashboard)/create-job/page.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js",
   "/(dashboard)/technicians/page": "app/(dashboard)/technicians/page.js",
-  "/auth/confirm/route": "app/auth/confirm/route.js",
-  "/login/page": "app/login/page.js",
-  "/set-password/page": "app/set-password/page.js"
+  "/_not-found/page": "app/_not-found/page.js"
 }

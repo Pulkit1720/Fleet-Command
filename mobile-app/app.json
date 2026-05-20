@@ -42,7 +42,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Fleet Command to use your location for job verification."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "scheme": "fleetcommand",
     "extra": {

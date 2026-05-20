@@ -2,7 +2,9 @@
 const nextConfig = {
     reactStrictMode: true,
     images: {
-        domains: ['api.mapbox.com'],
+        remotePatterns: [
+            { protocol: 'https', hostname: 'api.mapbox.com' },
+        ],
     },
 };
 

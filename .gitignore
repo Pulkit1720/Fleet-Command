@@ -1,7 +1,15 @@
 .env
+.env.*
 node_modules/
 .next
 .claude
 .cursor
-.expo
-.vscode
+.expo/
+.vscodeg
+# LLM/AI context files
+handoff.md
+.handoff.md
+CLAUDE.md
+ONBOARDING.md
+*-context.md
+*-prompt.md
