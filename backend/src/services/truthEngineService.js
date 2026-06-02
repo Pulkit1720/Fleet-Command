@@ -12,11 +12,11 @@ export function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 function toRad(deg) {
-    return deg * (Math.PI / 100);
+    return deg * (Math.PI / 180);
 }
 
 //Check if technician is within geofence
-export function isWithinGeofence(techLat, techLng, joblat, jobLng, radiusMeters = 200) {
+export function isWithinGeofence(techLat, techLng, jobLat, jobLng, radiusMeters = 200) {
     const distance = calculateDistance(techLat, techLng, jobLat, jobLng);
     return {
         isWithin: distance <= radiusMeters,

@@ -1,0 +1,37 @@
+steps:
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: write-env
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        cat > .env.production <<EOF
+        NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_MAPBOX_TOKEN=${_NEXT_PUBLIC_MAPBOX_TOKEN}
+        EOF
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - fleetcommand-admin
+      - --source=.
+      - --region=asia-south2
+      - --platform=managed
+      - --allow-unauthenticated
+      - --quiet
+
+substitutions:
+  _NEXT_PUBLIC_API_URL: https://fleetcommand-backend-cosiqvz7qa-em.a.run.app/api
+  _NEXT_PUBLIC_SUPABASE_URL: https://hywmgmuvzprbellarzpm.supabase.co
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+  _NEXT_PUBLIC_MAPBOX_TOKEN: ""
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1200s
