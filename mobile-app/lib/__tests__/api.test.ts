@@ -1,4 +1,13 @@
-import { supabase } from '../supabase';
+const mockGetSession = jest.fn();
+
+jest.mock('../supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: () => mockGetSession(),
+    },
+  },
+}));
+
 import {
   getMyJobs,
   getJob,
@@ -6,16 +15,6 @@ import {
   updateJobStatus,
   updateMyLocation,
 } from '../api';
-
-jest.mock('../supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: jest.fn(),
-    },
-  },
-}));
-
-const mockGetSession = supabase.auth.getSession as jest.Mock;
 
 describe('mobile api client', () => {
   const API_URL = 'http://localhost:4000/api';

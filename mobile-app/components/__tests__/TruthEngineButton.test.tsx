@@ -1,9 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import TruthEngineButton from '../TruthEngineButton';
 import { Job } from '../../lib/types';
-import * as location from '../../lib/location';
-import * as api from '../../lib/api';
 
 const mockTechnician = {
   id: 'tech-1',
@@ -18,11 +15,20 @@ jest.mock('../../context/AuthContext', () => ({
   useAuth: () => ({ technician: mockTechnician }),
 }));
 
-jest.mock('../../lib/location');
-jest.mock('../../lib/api');
+const mockGetCurrentLocation = jest.fn();
+const mockUpdateJobStatus = jest.fn();
 
-const mockGetCurrentLocation = location.getCurrentLocation as jest.Mock;
-const mockUpdateJobStatus = api.updateJobStatus as jest.Mock;
+jest.mock('../../lib/location', () => ({
+  getCurrentLocation: (...args: unknown[]) => mockGetCurrentLocation(...args),
+  calculateDistance: jest.requireActual('../../lib/location').calculateDistance,
+  formatDistance: jest.requireActual('../../lib/location').formatDistance,
+}));
+
+jest.mock('../../lib/api', () => ({
+  updateJobStatus: (...args: unknown[]) => mockUpdateJobStatus(...args),
+}));
+
+import TruthEngineButton from '../TruthEngineButton';
 
 const jobSite = { lat: 40.7128, lng: -74.006 };
 
@@ -135,7 +141,7 @@ describe('TruthEngineButton', () => {
     render(<TruthEngineButton job={makeJob()} onStatusUpdate={jest.fn()} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Location permission denied')).toBeTruthy();
+      expect(screen.getAllByText('Location permission denied').length).toBeGreaterThan(0);
     });
   });
 

@@ -5,7 +5,7 @@ node_modules/
 .claude
 .cursor
 .expo/
-.vscodeg
+.vscode
 # LLM/AI context files
 handoff.md
 .handoff.md

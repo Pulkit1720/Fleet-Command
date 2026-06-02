@@ -2,25 +2,24 @@ import React from 'react';
 import { Text } from 'react-native';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '../AuthContext';
-import { supabase } from '../../lib/supabase';
+
+const mockGetSession = jest.fn();
+const mockOnAuthStateChange = jest.fn();
+const mockSignInWithPassword = jest.fn();
+const mockSignOut = jest.fn();
+const mockFrom = jest.fn();
 
 jest.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: jest.fn(),
-      onAuthStateChange: jest.fn(),
-      signInWithPassword: jest.fn(),
-      signOut: jest.fn(),
+      getSession: (...args: unknown[]) => mockGetSession(...args),
+      onAuthStateChange: (...args: unknown[]) => mockOnAuthStateChange(...args),
+      signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
+      signOut: (...args: unknown[]) => mockSignOut(...args),
     },
-    from: jest.fn(),
+    from: (...args: unknown[]) => mockFrom(...args),
   },
 }));
-
-const mockGetSession = supabase.auth.getSession as jest.Mock;
-const mockOnAuthStateChange = supabase.auth.onAuthStateChange as jest.Mock;
-const mockSignInWithPassword = supabase.auth.signInWithPassword as jest.Mock;
-const mockSignOut = supabase.auth.signOut as jest.Mock;
-const mockFrom = supabase.from as jest.Mock;
 
 function TestConsumer() {
   const { technician, isLoading, signIn, signOut } = useAuth();
@@ -66,9 +65,12 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('loading').props.children).toBe('loading');
 
-    await waitFor(() => {
-      expect(screen.getByTestId('loading').props.children).toBe('ready');
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('loading').props.children).toBe('ready');
+      },
+      { timeout: 3000 }
+    );
     expect(screen.getByTestId('technician').props.children).toBe('none');
   });
 

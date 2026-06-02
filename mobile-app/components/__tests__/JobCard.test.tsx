@@ -45,8 +45,11 @@ describe('JobCard', () => {
 
   it('shows scheduled date when present', () => {
     render(<JobCard job={baseJob} onPress={jest.fn()} />);
-    expect(screen.getByText(/Jun/)).toBeTruthy();
-    expect(screen.getByText(/15/)).toBeTruthy();
+    const expected = new Date(baseJob.scheduled_date!).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+    expect(screen.getByText(expected)).toBeTruthy();
   });
 
   it('calls onPress when card is tapped', () => {

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///Users/pulkitbhatia/Desktop/Work/Fleetcommand/web-admin/src/app/%28dashboard%29/page.tsx"],"sourcesContent":["import Header from '@/components/layout/Header';\nimport JobForm from '@/components/jobs/JobForm';\n\nexport default function CreateJobPage() {\n    return (\n        <>\n            <Header title=\"Create New Job\" subtitle=\"Schedule a new service job\" />\n            <div className=\"p-6\">\n                <div className=\"mx-auto max-w-4xl\">\n                    <JobForm />\n                </div>\n            </div>\n        </>\n    );\n}"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;AAGe,SAAS;IACpB,qBACI;;0BACI,8PAAC;gBAAO,OAAM;gBAAiB,UAAS;;;;;;0BACxC,8PAAC;gBAAI,WAAU;0BACX,cAAA,8PAAC;oBAAI,WAAU;8BACX,cAAA,8PAAC;;;;;;;;;;;;;;;;;AAKrB"}}]
-}

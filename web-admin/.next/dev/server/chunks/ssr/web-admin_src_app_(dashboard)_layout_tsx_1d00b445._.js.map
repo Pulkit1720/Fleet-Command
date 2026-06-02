@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/pulkitbhatia/Desktop/Work/Fleetcommand/web-admin/src/app/%28dashboard%29/layout.tsx"],"sourcesContent":["import Sidebar from '@/components/layout/Sidebar';\n\nexport default function DashboardLayout({\n    children,\n}: {\n    children: React.ReactNode;\n}) {\n    return (\n        <div className=\"min-h-screen bg-content-bg\">\n            <Sidebar />\n            <main className=\"ml-64\">{children}</main>\n        </div>\n    );\n}"],"names":[],"mappings":";;;;;;;;;;;;AAEe,SAAS,gBAAgB,EACpC,QAAQ,EAGX;IACG,qBACI,8PAAC;QAAI,WAAU;;0BACX,8PAAC;;;;;0BACD,8PAAC;gBAAK,WAAU;0BAAS;;;;;;;;;;;;AAGrC"}}]
-}
