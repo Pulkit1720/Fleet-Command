@@ -1,228 +1,129 @@
 # Fleet Command
 
-A field service management platform for dispatching technicians and tracking jobs in real time. Built as a monorepo with three packages:
+> A full-stack field service management platform — dispatch technicians, track jobs in real time, and verify on-site work with location-proofed status updates.
 
-| Package | Stack | Purpose |
-|---|---|---|
-| `backend/` | Node.js + Express | REST API |
-| `web-admin/` | Next.js 14 + Tailwind | Admin dashboard |
-| `mobile-app/` | Expo (React Native) | Technician mobile app |
+Fleet Command is an end-to-end system I designed and built across **web, mobile, and backend**: admins assign and monitor jobs from a live dashboard, technicians action those jobs from a native mobile app, and every status change is verified against the job's physical location.
 
----
+<!-- TODO: add hero screenshot / demo GIF here -->
+<!-- ![Fleet Command dashboard](docs/screenshots/dashboard.png) -->
 
-## Architecture
-
-```
-Fleet Command
-├── backend/          Node.js REST API (deployed on Google Cloud Run)
-├── web-admin/        Next.js admin dashboard (deployed on Google Cloud Run)
-├── mobile-app/       Expo React Native app (distributed via EAS Build)
-└── database/         Supabase SQL schema
-```
-
-**Infrastructure:**
-- **Auth:** Supabase Auth (PKCE flow, invite-based for technicians)
-- **Database:** Supabase (PostgreSQL)
-- **Maps:** Mapbox GL (web), React Native Maps (mobile)
-- **Email:** Nodemailer + Gmail SMTP
-- **Hosting:** Google Cloud Run (`asia-south2`)
-- **Mobile builds:** EAS Build
+<p align="center">
+  <em>🔗 Live demo: coming soon &nbsp;·&nbsp; 📱 Mobile build: coming soon</em>
+</p>
 
 ---
 
-## Getting Started
+## Tech Stack
 
-### Prerequisites
-
-- Node.js 18+
-- [Supabase](https://supabase.com) project
-- [Mapbox](https://mapbox.com) account (for maps)
-- Gmail account with an [App Password](https://myaccount.google.com/apppasswords) (for invite emails)
-- [Google Cloud CLI](https://cloud.google.com/sdk) (for deployment)
-- [EAS CLI](https://docs.expo.dev/eas/) (for mobile builds)
-
-### 1. Database
-
-Run the schema against your Supabase project:
-
-```bash
-# In the Supabase SQL editor, run:
-database/schema.sql
-```
-
-### 2. Backend
-
-```bash
-cd backend
-cp .env.example .env
-# Fill in .env values (see Environment Variables section)
-npm install
-npm run dev
-```
-
-Runs on `http://localhost:4000`
-
-### 3. Web Admin
-
-```bash
-cd web-admin
-cp .env .env.local
-# Set NEXT_PUBLIC_API_URL=http://localhost:4000/api
-npm install
-npm run dev
-```
-
-Runs on `http://localhost:3000`
-
-### 4. Mobile App
-
-```bash
-cd mobile-app
-npm install
-npx expo start
-```
-
-Scan the QR code with Expo Go (iOS/Android) or press `a` for Android emulator.
-
-> **Note:** AsyncStorage and location features require a native build — use `npx expo run:android` or an EAS build for full functionality.
-
----
-
-## Environment Variables
-
-### Backend (`backend/.env`)
-
-| Variable | Description |
+| Layer | Technologies |
 |---|---|
-| `PORT` | Server port (default: `4000`) |
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_SECRET_KEY` | Supabase service role key (admin operations) |
-| `SUPABASE_ANON_KEY` | Supabase anon key |
-| `MAPBOX_ACCESS_TOKEN` | Mapbox token for geocoding |
-| `CORS_ORIGINS` | Comma-separated allowed origins |
-| `WEB_ADMIN_URL` | Web admin base URL (used in invite email links) |
-| `GMAIL_USER` | Gmail address for sending invite emails |
-| `GMAIL_APP_PASSWORD` | Gmail App Password (not your login password) |
+| **Backend** | Node.js, Express, Supabase (PostgreSQL) |
+| **Web Admin** | Next.js 16 (App Router), React 18, Tailwind CSS, Mapbox GL |
+| **Mobile** | React Native (Expo), Expo Router, React Native Maps |
+| **Auth** | Supabase Auth — PKCE flow, invite-based onboarding |
+| **Infra** | Google Cloud Run (`asia-south2`), EAS Build, Nodemailer (Gmail SMTP) |
+| **Testing** | Vitest (backend + web), Jest (mobile) |
 
-### Web Admin (`web-admin/.env`)
-
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend API URL |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox token for job map |
-
-### Mobile App (`mobile-app/.env`)
-
-| Variable | Description |
-|---|---|
-| `EXPO_PUBLIC_API_URL` | Backend API URL |
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+Architected as a monorepo with three independently deployable packages — `backend/`, `web-admin/`, and `mobile-app/` — sharing a single Supabase database.
 
 ---
 
-## User Roles
+## Highlights
 
-### Admin
-- Logs in at the web admin dashboard
-- Creates and assigns jobs to technicians
-- Invites new technicians via email
-- Views live job map and stats
+### 🛰️ Truth Engine — location-verified job updates
+The standout feature. Before a technician can mark a job *In Progress* or *Completed*, the backend confirms they are physically on-site. It computes the distance between the technician's GPS coordinates and the job address using the **Haversine formula**, enforces a **200-metre geofence**, and writes an immutable audit log of every action — recorded coordinates, distance from site, and whether it fell inside the geofence. The result: trustworthy proof-of-work, not just a tapped button.
 
-### Technician
-- Receives an email invite from admin
-- Sets password via the invite link (web browser)
-- Logs into the mobile app to view and action jobs
-- Location is tracked when marking jobs in progress
+### 🗺️ Live dispatch map
+A Mapbox-powered dashboard plots every job by location with priority colour-coding, giving admins an at-a-glance view of the field.
 
----
+### 📋 Full job lifecycle
+Jobs flow through a clear state machine — `Pending → Assigned → In Progress → Completed` — with admins creating and assigning work and technicians actioning it from mobile.
 
-## Key Features
+### ✉️ Invite-based onboarding
+Admins invite technicians by email; technicians set their own password via a secure link and sign in on the mobile app. Built on Supabase Auth's PKCE flow.
 
-- **Job management** — create, assign, and track jobs through statuses: `Pending → Assigned → In Progress → Completed`
-- **Technician invites** — admin sends invite emails; technicians set their own password and sign in on mobile
-- **Live map** — Mapbox-powered map showing all job locations with priority colour coding
-- **Truth Engine** — verifies technician is on-site before allowing job status updates
-- **Address autocomplete** — Mapbox geocoding on job creation
+### 📍 Address autocomplete
+Mapbox geocoding turns free-text addresses into precise coordinates at job-creation time — which is what makes the Truth Engine's geofencing possible.
+
+<!-- TODO: add feature screenshots -->
+<!-- | Live map | Job detail (mobile) | Truth Engine log | -->
+<!-- |---|---|---| -->
+<!-- | ![](docs/screenshots/map.png) | ![](docs/screenshots/job.png) | ![](docs/screenshots/truth.png) | -->
 
 ---
 
-## Deployment
+## How It Works
 
-### Backend (Cloud Run)
-
-```bash
-cd backend
-gcloud run deploy fleetcommand-backend \
-  --source . \
-  --region asia-south2 \
-  --allow-unauthenticated \
-  --set-env-vars "NODE_ENV=production,SUPABASE_URL=...,SUPABASE_SECRET_KEY=...,SUPABASE_ANON_KEY=...,MAPBOX_ACCESS_TOKEN=...,CORS_ORIGINS=https://your-admin-url.run.app,WEB_ADMIN_URL=https://your-admin-url.run.app,GMAIL_USER=...,GMAIL_APP_PASSWORD=..."
+```
+            ┌──────────────────┐         ┌──────────────────┐
+            │   Web Admin       │         │   Mobile App      │
+            │   (Next.js)       │         │   (React Native)  │
+            │                   │         │                   │
+            │ • Create & assign │         │ • View jobs       │
+            │ • Live job map    │         │ • Update status   │
+            │ • Invite techs    │         │ • GPS check-in    │
+            └─────────┬─────────┘         └─────────┬─────────┘
+                      │                             │
+                      │           REST API          │
+                      └──────────────┬──────────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │   Backend (Express)  │
+                          │ • Auth middleware    │
+                          │ • Truth Engine       │
+                          │ • Geocoding          │
+                          │ • Invite emails      │
+                          └──────────┬───────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │  Supabase (Postgres) │
+                          │  + Supabase Auth     │
+                          └──────────────────────┘
 ```
 
-### Web Admin (Cloud Run)
+### Roles
 
-> `NEXT_PUBLIC_*` variables are baked in at build time — they **must** be in `.env.production` before deploying, not just set in Cloud Run console.
+**Admin** — signs into the web dashboard to create and assign jobs, invite technicians, and monitor the live map and stats.
 
-```bash
-cd web-admin
-# Update .env.production with real values first, then:
-gcloud run deploy fleetcommand-admin \
-  --source . \
-  --region asia-south2 \
-  --allow-unauthenticated
+**Technician** — accepts an email invite, sets a password, then uses the mobile app to view assigned jobs and update their status. Location is captured and verified on every status change.
+
+---
+
+## Repository Layout
+
 ```
-
-### Mobile App (EAS Build)
-
-```bash
-cd mobile-app
-
-# Preview APK (Android)
-eas build --platform android --profile preview
-
-# Production
-eas build --platform android --profile production
-eas build --platform ios --profile production
-```
-
-Set secrets via EAS before building:
-```bash
-eas env:create --environment preview --name EXPO_PUBLIC_API_URL --value https://your-backend.run.app/api
+fleet-command/
+├── backend/      Node.js + Express REST API
+│   └── src/
+│       ├── controllers/   Route handlers (jobs, technicians)
+│       ├── middleware/    Auth, error handling
+│       ├── routes/        Express routers
+│       └── services/      Geocoding, Truth Engine, email
+│
+├── web-admin/    Next.js admin dashboard
+│   └── src/
+│       ├── app/           App Router pages (dashboard, auth, login)
+│       ├── components/    UI components
+│       └── lib/           API & Supabase clients
+│
+├── mobile-app/   Expo React Native technician app
+│   ├── app/               Expo Router screens (tabs, job detail, auth)
+│   ├── components/        Shared components
+│   ├── context/           Auth context
+│   └── lib/               API client, types
+│
+└── database/     Supabase SQL schema
 ```
 
 ---
 
-## Project Structure
+## What I Learned / Built
 
-```
-backend/src/
-├── config/          Supabase client
-├── controllers/     Route handlers (jobs, technicians)
-├── middleware/      Auth, error handling
-├── routes/          Express routers
-└── services/        Geocoding, Truth Engine, email
+- Designed a **three-surface product** (web, mobile, API) sharing one auth system and database.
+- Implemented **geospatial verification** from scratch — Haversine distance + geofencing — to solve a real trust problem in field service.
+- Built **invite-based, role-aware auth** on Supabase's PKCE flow spanning browser and native clients.
+- Shipped a **deployable monorepo** with CI-friendly test suites (Vitest + Jest) across all three packages.
 
-web-admin/src/
-├── app/             Next.js App Router pages
-│   ├── (dashboard)/ Protected dashboard pages
-│   ├── auth/        Supabase auth callback
-│   ├── login/       Admin login
-│   ├── set-password/        Admin invite setup
-│   └── technician/setup/    Technician invite setup
-├── components/      UI components
-├── layout/          Sidebar, Header
-└── lib/             API client, Supabase clients
+---
 
-mobile-app/
-├── app/             Expo Router screens
-│   ├── (tabs)/      Home (job list), Profile
-│   ├── job/[id]     Job detail
-│   ├── login        Auth screen
-│   └── set-password Technician invite setup
-├── components/      Shared components
-├── context/         Auth context
-└── lib/             API client, types
-```
+<p align="center"><sub>Built by Pulkit Bhatia · field service management, end to end.</sub></p>
