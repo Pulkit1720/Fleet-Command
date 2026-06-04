@@ -66,6 +66,7 @@ export async function getJobs(req, res, next) {
         let query = supabase
             .from('jobs')
             .select(`*, ${TECH_JOIN}`, { count: 'exact' })
+            .eq('created_by', req.user.id)
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
@@ -98,6 +99,7 @@ export async function getJob(req, res, next) {
             .from('jobs')
             .select(`*, ${TECH_JOIN_AVATAR}`)
             .eq('id', id)
+            .eq('created_by', req.user.id)
             .single();
 
         if (error) throw error;
@@ -158,7 +160,8 @@ export async function createJob(req, res, next) {
                 scheduled_time_start,
                 scheduled_time_end,
                 estimated_duration_minutes: minutesToTimeValue(estimated_duration_minutes),
-                notes
+                notes,
+                created_by: req.user.id
             })
             .select(`*, ${TECH_JOIN}`)
             .single();
@@ -198,6 +201,7 @@ export async function updateJob(req, res, next) {
             .from('jobs')
             .update(updates)
             .eq('id', id)
+            .eq('created_by', req.user.id)
             .select(`*, ${TECH_JOIN}`)
             .single();
 
@@ -278,17 +282,43 @@ export async function updateJobStatus(req, res, next) {
     }
 }
 
-// Get job stats
+// Get job stats scoped to the requesting admin.
+// The `job_stats` view aggregates ALL jobs, so we compute the same shape here
+// over only this admin's jobs.
 export async function getJobStats(req, res, next) {
     try {
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
         const { data, error } = await supabase
-            .from('job_stats')
-            .select('*')
-            .single();
+            .from('jobs')
+            .select('status, priority, scheduled_date')
+            .eq('created_by', req.user.id);
 
         if (error) throw error;
 
-        res.json(data);
+        const stats = {
+            unassigned_count: 0,
+            assigned_count: 0,
+            in_progress_count: 0,
+            completed_count: 0,
+            emergency_count: 0,
+            today_count: 0,
+            total_count: data.length,
+        };
+
+        for (const job of data) {
+            if (job.status === 'Unassigned') stats.unassigned_count++;
+            else if (job.status === 'Assigned') stats.assigned_count++;
+            else if (job.status === 'In Progress') stats.in_progress_count++;
+            else if (job.status === 'Completed') stats.completed_count++;
+
+            if (job.priority === 'Emergency' && !['Completed', 'Cancelled'].includes(job.status)) {
+                stats.emergency_count++;
+            }
+            if (job.scheduled_date === today) stats.today_count++;
+        }
+
+        res.json(stats);
     } catch (error) {
         next(error);
     }

@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// fetchApi attaches the Supabase access token — mock the client to return one.
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({
+    auth: {
+      getSession: async () => ({
+        data: { session: { access_token: 'test-token' } },
+      }),
+    },
+  }),
+}));
+
 const API_URL = 'http://localhost:4000/api';
+
+const AUTH_HEADERS = {
+  'Content-Type': 'application/json',
+  Authorization: 'Bearer test-token',
+};
 
 describe('api client', () => {
   beforeEach(() => {
@@ -86,9 +102,7 @@ describe('api client', () => {
       expect(fetch).toHaveBeenCalledWith(`${API_URL}/jobs`, {
         method: 'POST',
         body: JSON.stringify(payload),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: AUTH_HEADERS,
       });
       expect(result).toEqual(job);
     });
@@ -116,9 +130,7 @@ describe('api client', () => {
           tech_lat: 40.7,
           tech_lng: -74.0,
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: AUTH_HEADERS,
       });
     });
   });
@@ -162,9 +174,7 @@ describe('api client', () => {
           email: 'tech@test.com',
           phone: '555-0100',
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: AUTH_HEADERS,
       });
       expect(result).toEqual(technician);
     });

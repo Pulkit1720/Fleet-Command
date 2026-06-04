@@ -48,27 +48,27 @@ describe('formatTime', () => {
 
 describe('getPriorityColor', () => {
   it('returns correct classes for each priority', () => {
-    expect(getPriorityColor('Emergency')).toContain('red');
-    expect(getPriorityColor('Normal')).toContain('blue');
-    expect(getPriorityColor('Low')).toContain('slate');
+    expect(getPriorityColor('Emergency')).toContain('rose');
+    expect(getPriorityColor('Normal')).toContain('brand');
+    expect(getPriorityColor('Low')).toContain('ink');
   });
 
-  it('returns default slate for unknown priority', () => {
-    expect(getPriorityColor('Unknown')).toContain('slate');
+  it('returns default ink for unknown priority', () => {
+    expect(getPriorityColor('Unknown')).toContain('ink');
   });
 });
 
 describe('getStatusColor', () => {
   it('returns correct classes for each status', () => {
     expect(getStatusColor('Unassigned')).toContain('amber');
-    expect(getStatusColor('Assigned')).toContain('blue');
-    expect(getStatusColor('In Progress')).toContain('purple');
-    expect(getStatusColor('Completed')).toContain('green');
-    expect(getStatusColor('Cancelled')).toContain('slate');
+    expect(getStatusColor('Assigned')).toContain('brand');
+    expect(getStatusColor('In Progress')).toContain('violet');
+    expect(getStatusColor('Completed')).toContain('emerald');
+    expect(getStatusColor('Cancelled')).toContain('ink');
   });
 
   it('returns default for unknown status', () => {
-    expect(getStatusColor('Pending')).toContain('slate');
+    expect(getStatusColor('Pending')).toContain('ink');
   });
 });
 
@@ -82,6 +82,6 @@ describe('getJobTypeColor', () => {
   });
 
   it('returns default for unknown job type', () => {
-    expect(getJobTypeColor('Survey')).toContain('slate');
+    expect(getJobTypeColor('Survey')).toContain('ink');
   });
 });

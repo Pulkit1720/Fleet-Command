@@ -1,4 +1,5 @@
 import { Job, JobStats, Technician, AddressSuggestion } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -6,10 +7,18 @@ async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
+  // Attach the current admin's access token so the backend can scope by user
+  const {
+    data: { session },
+  } = await createClient().auth.getSession();
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {}),
       ...options?.headers,
     },
   });
@@ -20,6 +29,18 @@ async function fetchApi<T>(
   }
 
   return res.json();
+}
+
+// Auth API
+export async function signupAdmin(data: {
+  full_name: string;
+  email: string;
+  password: string;
+}): Promise<{ ok: boolean; user_id?: string }> {
+  return fetchApi('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
 // Jobs API

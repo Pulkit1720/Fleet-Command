@@ -5,8 +5,12 @@ import { User, Phone, Mail, MapPin, Circle, UserPlus, X, Loader2 } from 'lucide-
 import Header from '@/layout/Header';
 import { getTechnicians, inviteTechnician } from '@/lib/api';
 import { Technician } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TechniciansPage() {
+    const { user } = useAuth();
+    const isAdmin =
+        (user?.user_metadata?.role ?? user?.app_metadata?.role) === 'admin';
     const [technicians, setTechnicians] = useState<Technician[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -34,15 +38,17 @@ export default function TechniciansPage() {
                             <span className="tabular font-medium text-ink-700">{technicians.length}</span> technician{technicians.length !== 1 ? 's' : ''}
                         </p>
                     )}
-                    <div className="ml-auto">
-                        <button
-                            onClick={() => setShowInviteModal(true)}
-                            className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-brand active:scale-[0.98]"
-                        >
-                            <UserPlus className="h-4 w-4" />
-                            Invite technician
-                        </button>
-                    </div>
+                    {isAdmin && (
+                        <div className="ml-auto">
+                            <button
+                                onClick={() => setShowInviteModal(true)}
+                                className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-brand active:scale-[0.98]"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                Invite technician
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {isLoading && (

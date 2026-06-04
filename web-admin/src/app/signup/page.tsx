@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Truck, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { signupAdmin } from '@/lib/api';
 
-export default function LoginPage() {
+export default function SignupPage() {
     const router = useRouter();
+    const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -16,27 +18,39 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setIsLoading(true);
 
-        const supabase = createClient();
-        const { error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (authError) {
-            setError(authError.message);
-            setIsLoading(false);
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters');
             return;
         }
 
-        router.push('/');
-        router.refresh();
+        setIsLoading(true);
+        try {
+            // Create the admin account (server-side, email pre-confirmed)…
+            await signupAdmin({ full_name: fullName.trim(), email: email.trim(), password });
+
+            // …then sign in immediately for a frictionless first session.
+            const supabase = createClient();
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            });
+            if (signInError) {
+                setError(signInError.message);
+                setIsLoading(false);
+                return;
+            }
+
+            router.push('/');
+            router.refresh();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not create your account');
+            setIsLoading(false);
+        }
     };
 
     return (
         <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-sidebar-bg px-4">
-            {/* ambient glow */}
             <div className="pointer-events-none absolute -top-40 right-0 h-[420px] w-[420px] rounded-full bg-brand-600/25 blur-[120px]" />
             <div className="pointer-events-none absolute -bottom-40 -left-20 h-[420px] w-[420px] rounded-full bg-sky-500/15 blur-[120px]" />
 
@@ -48,13 +62,13 @@ export default function LoginPage() {
                     </div>
                     <div className="text-center">
                         <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Command</h1>
-                        <p className="mt-1 text-sm text-ink-400">Operations dashboard</p>
+                        <p className="mt-1 text-sm text-ink-400">Create your workspace</p>
                     </div>
                 </div>
 
                 {/* Card */}
                 <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-lg backdrop-blur-xl">
-                    <h2 className="mb-6 text-lg font-medium text-white">Sign in to your workspace</h2>
+                    <h2 className="mb-6 text-lg font-medium text-white">Create an admin account</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {error && (
@@ -62,6 +76,21 @@ export default function LoginPage() {
                                 {error}
                             </div>
                         )}
+
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium text-ink-300">
+                                Full name
+                            </label>
+                            <input
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                required
+                                autoComplete="name"
+                                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder-ink-500 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
+                                placeholder="Maya Rodriguez"
+                            />
+                        </div>
 
                         <div>
                             <label className="mb-1.5 block text-sm font-medium text-ink-300">
@@ -87,9 +116,9 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                                 className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder-ink-500 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
-                                placeholder="••••••••"
+                                placeholder="Min. 8 characters"
                             />
                         </div>
 
@@ -101,19 +130,19 @@ export default function LoginPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Signing in…
+                                    Creating account…
                                 </>
                             ) : (
-                                'Sign in'
+                                'Create account'
                             )}
                         </button>
                     </form>
                 </div>
 
                 <p className="mt-6 text-center text-sm text-ink-400">
-                    Don&apos;t have an account?{' '}
-                    <Link href="/signup" className="font-medium text-brand-300 transition-colors hover:text-brand-200">
-                        Create one
+                    Already have an account?{' '}
+                    <Link href="/login" className="font-medium text-brand-300 transition-colors hover:text-brand-200">
+                        Sign in
                     </Link>
                 </p>
             </div>

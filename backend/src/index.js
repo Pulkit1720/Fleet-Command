@@ -15,7 +15,9 @@ const PORT = process.env.PORT || 4000;
 const corsOptions = {
     origin: process.env.CORS_ORIGINS?.split(',') || [
         'http://localhost:3000',
-        'http://localhost:8081'
+        'http://localhost:8081',
+        'https://www.fleetcd.com',
+        'https://fleetcd.com'
     ],
 
     credentials: true,

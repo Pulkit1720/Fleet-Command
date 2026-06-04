@@ -73,9 +73,10 @@ describe('techniciansController', () => {
       const res = mockRes();
       const next = vi.fn();
 
-      await getTechnicians({ query: {} }, res, next);
+      await getTechnicians({ query: {}, user: { id: 'admin-1' } }, res, next);
 
       expect(res.json).toHaveBeenCalledWith(technicians);
+      expect(chain.eq).toHaveBeenCalledWith('admin_id', 'admin-1');
     });
 
     it('filters by is_active when query param provided', async () => {
@@ -85,7 +86,11 @@ describe('techniciansController', () => {
       const res = mockRes();
       const next = vi.fn();
 
-      await getTechnicians({ query: { is_active: 'true' } }, res, next);
+      await getTechnicians(
+        { query: { is_active: 'true' }, user: { id: 'admin-1' } },
+        res,
+        next
+      );
 
       expect(chain.eq).toHaveBeenCalledWith('is_active', true);
     });
@@ -133,11 +138,36 @@ describe('techniciansController', () => {
   });
 
   describe('inviteTechnician', () => {
+    const adminUser = { id: 'admin-1', user_metadata: { role: 'admin' } };
+
+    it('returns 403 when caller is not an admin', async () => {
+      const res = mockRes();
+      const next = vi.fn();
+
+      await inviteTechnician(
+        {
+          body: { full_name: 'Tech', email: 'tech@test.com' },
+          user: { id: 'tech-1', user_metadata: { role: 'technician' } },
+        },
+        res,
+        next
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Only an admin can invite technicians',
+      });
+    });
+
     it('returns 400 when required fields missing', async () => {
       const res = mockRes();
       const next = vi.fn();
 
-      await inviteTechnician({ body: { full_name: 'Only Name' } }, res, next);
+      await inviteTechnician(
+        { body: { full_name: 'Only Name' }, user: adminUser },
+        res,
+        next
+      );
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
@@ -153,7 +183,7 @@ describe('techniciansController', () => {
       const next = vi.fn();
 
       await inviteTechnician(
-        { body: { full_name: 'Tech', email: 'tech@test.com' } },
+        { body: { full_name: 'Tech', email: 'tech@test.com' }, user: adminUser },
         res,
         next
       );
@@ -195,6 +225,7 @@ describe('techniciansController', () => {
             email: 'new@test.com',
             phone: '555-0100',
           },
+          user: adminUser,
         },
         res,
         next

@@ -6,9 +6,11 @@ export async function getTechnicians(req, res, next) {
   try {
     const { is_active } = req.query;
 
+    // Scope to the technicians owned by the requesting admin
     let query = supabase
       .from('technicians')
       .select('*')
+      .eq('admin_id', req.user.id)
       .order('full_name');
 
     if (is_active !== undefined) {
@@ -72,6 +74,12 @@ export async function updateLocation(req, res, next) {
 // Invite a new technician via email
 export async function inviteTechnician(req, res, next) {
   try {
+    // Only admins may invite technicians
+    const role = req.user?.user_metadata?.role ?? req.user?.app_metadata?.role;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Only an admin can invite technicians' });
+    }
+
     const { full_name, email, phone } = req.body;
 
     if (!full_name || !email) {
@@ -100,11 +108,12 @@ export async function inviteTechnician(req, res, next) {
 
     if (inviteError) throw inviteError;
 
-    // Create technician record linked to the new auth user
+    // Create technician record linked to the new auth user, owned by this admin
     const { data: technician, error: techError } = await supabase
       .from('technicians')
       .insert({
         user_id: inviteData.user?.id,
+        admin_id: req.user.id,
         full_name,
         email,
         phone: phone || null,

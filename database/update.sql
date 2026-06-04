@@ -132,3 +132,36 @@ FROM technician
 ORDER BY full_name;
 
 SELECT unnest(enum_range(NULL::job_priority)) AS priority_values;
+
+
+-- ============================================================
+-- MIGRATION: add_admin_ownership_and_policies  (applied 2026-06)
+--
+-- Per-admin data isolation. NOTE: the live table is `technicians`
+-- (plural) — the `technician` references above and in schema.sql are
+-- STALE. This block reflects what was applied to the live database.
+-- ============================================================
+
+-- Each technician belongs to the admin (auth user) who invited them.
+-- Jobs are scoped by the existing jobs.created_by column.
+ALTER TABLE public.technicians
+  ADD COLUMN IF NOT EXISTS admin_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS technicians_admin_id_idx ON public.technicians(admin_id);
+
+-- Admin ownership policies (additive — technician self-access policies kept).
+-- The Express backend uses the service key and bypasses RLS; these protect
+-- direct client (mobile) access and are defense-in-depth.
+DROP POLICY IF EXISTS "Admins manage own technicians" ON public.technicians;
+CREATE POLICY "Admins manage own technicians"
+  ON public.technicians FOR ALL
+  TO authenticated
+  USING (admin_id = (SELECT auth.uid()))
+  WITH CHECK (admin_id = (SELECT auth.uid()));
+
+DROP POLICY IF EXISTS "Admins manage own jobs" ON public.jobs;
+CREATE POLICY "Admins manage own jobs"
+  ON public.jobs FOR ALL
+  TO authenticated
+  USING (created_by = (SELECT auth.uid()))
+  WITH CHECK (created_by = (SELECT auth.uid()));

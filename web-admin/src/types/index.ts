@@ -5,6 +5,7 @@ export type JobStatus = 'Unassigned' | 'Assigned' | 'In Progress' | 'Completed' 
 export interface Technician {
   id: string;
   user_id: string | null;
+  admin_id: string | null;
   full_name: string;
   email: string;
   phone: string | null;

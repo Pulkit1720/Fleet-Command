@@ -96,7 +96,7 @@ describe('jobsController', () => {
       const chain = chainable({ data: jobs, error: null, count: 1 });
       mockFrom.mockReturnValue(chain);
 
-      const req = { query: { limit: '10', offset: '0' } };
+      const req = { query: { limit: '10', offset: '0' }, user: { id: 'admin-1' } };
       const res = mockRes();
       const next = mockNext();
 
@@ -116,7 +116,7 @@ describe('jobsController', () => {
       const chain = chainable({ data: null, error, count: 0 });
       mockFrom.mockReturnValue(chain);
 
-      const req = { query: {} };
+      const req = { query: {}, user: { id: 'admin-1' } };
       const res = mockRes();
       const next = mockNext();
 
@@ -132,7 +132,7 @@ describe('jobsController', () => {
       const chain = chainable({ data: job, error: null });
       mockFrom.mockReturnValue(chain);
 
-      const req = { params: { id: 'job-1' } };
+      const req = { params: { id: 'job-1' }, user: { id: 'admin-1' } };
       const res = mockRes();
       const next = mockNext();
 
@@ -156,6 +156,7 @@ describe('jobsController', () => {
       mockFrom.mockReturnValue(chain);
 
       const req = {
+        user: { id: 'admin-1' },
         body: {
           client_name: 'Client',
           site_address: '123 St',
@@ -195,6 +196,7 @@ describe('jobsController', () => {
       mockFrom.mockReturnValue(chain);
 
       const req = {
+        user: { id: 'admin-1' },
         body: {
           client_name: 'Client',
           site_address: 'New York',
@@ -229,6 +231,7 @@ describe('jobsController', () => {
 
       const req = {
         params: { id: 'j1' },
+        user: { id: 'admin-1' },
         body: { assigned_technician_id: 'tech-2', status: 'Assigned' },
       };
       const res = mockRes();
@@ -261,6 +264,7 @@ describe('jobsController', () => {
 
       const req = {
         params: { id: 'j1' },
+        user: { id: 'admin-1' },
         body: { site_address: 'New address' },
       };
       const res = mockRes();
@@ -393,17 +397,32 @@ describe('jobsController', () => {
   });
 
   describe('getJobStats', () => {
-    it('returns stats from job_stats view', async () => {
-      const stats = { total_count: 10, unassigned_count: 2 };
-      const chain = chainable({ data: stats, error: null });
+    it('aggregates stats over the requesting admin\'s jobs only', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const jobs = [
+        { status: 'Unassigned', priority: 'Normal', scheduled_date: today },
+        { status: 'Assigned', priority: 'Emergency', scheduled_date: null },
+        { status: 'In Progress', priority: 'Normal', scheduled_date: today },
+        { status: 'Completed', priority: 'Emergency', scheduled_date: null },
+      ];
+      const chain = chainable({ data: jobs, error: null });
       mockFrom.mockReturnValue(chain);
 
       const res = mockRes();
       const next = mockNext();
 
-      await getJobStats({}, res, next);
+      await getJobStats({ user: { id: 'admin-1' } }, res, next);
 
-      expect(res.json).toHaveBeenCalledWith(stats);
+      expect(chain.eq).toHaveBeenCalledWith('created_by', 'admin-1');
+      expect(res.json).toHaveBeenCalledWith({
+        unassigned_count: 1,
+        assigned_count: 1,
+        in_progress_count: 1,
+        completed_count: 1,
+        emergency_count: 1, // the Completed Emergency is excluded
+        today_count: 2,
+        total_count: 4,
+      });
     });
   });
 

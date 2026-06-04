@@ -10,19 +10,24 @@ import {
     getJobLogs,
     checkGeofence
 } from '../controllers/jobsController.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
-// Jobs CRUD
-router.get('/', getJobs);
-router.get('/stats', getJobStats);
+// Admin-facing: scoped to the requesting admin's own jobs
+router.get('/', authenticate, getJobs);
+router.get('/stats', authenticate, getJobStats);
+router.post('/', authenticate, createJob);
+
+// Shared / mobile (unauthenticated for now — see plan notes)
 router.get('/address-search', searchAddress);
-router.get('/:id', getJob);
-router.post('/', createJob);
-router.put('/:id', updateJob);
-router.patch('/:id', updateJob);
 router.post('/:id/status', updateJobStatus);
 router.get('/:id/logs', getJobLogs);
 router.get('/:id/geofence', checkGeofence);
+
+// Admin-facing single-job read/edit (declared after static paths above)
+router.get('/:id', authenticate, getJob);
+router.put('/:id', authenticate, updateJob);
+router.patch('/:id', authenticate, updateJob);
 
 export default router;
