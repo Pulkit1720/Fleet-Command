@@ -34,32 +34,36 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-            <div className="w-full max-w-sm">
+        <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-sidebar-bg px-4">
+            {/* ambient glow */}
+            <div className="pointer-events-none absolute -top-40 right-0 h-[420px] w-[420px] rounded-full bg-brand-600/25 blur-[120px]" />
+            <div className="pointer-events-none absolute -bottom-40 -left-20 h-[420px] w-[420px] rounded-full bg-sky-500/15 blur-[120px]" />
+
+            <div className="relative w-full max-w-sm animate-fade-in">
                 {/* Logo */}
                 <div className="mb-8 flex flex-col items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600">
-                        <Truck className="h-7 w-7 text-white" />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand">
+                        <Truck className="h-7 w-7 text-white" strokeWidth={2.25} />
                     </div>
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold text-white">Fleet Command</h1>
-                        <p className="mt-1 text-sm text-slate-400">Admin Dashboard</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Command</h1>
+                        <p className="mt-1 text-sm text-ink-400">Operations dashboard</p>
                     </div>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
-                    <h2 className="mb-6 text-lg font-semibold text-white">Sign in</h2>
+                <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-lg backdrop-blur-xl">
+                    <h2 className="mb-6 text-lg font-medium text-white">Sign in to your workspace</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {error && (
-                            <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
                                 {error}
                             </div>
                         )}
 
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label className="mb-1.5 block text-sm font-medium text-ink-300">
                                 Email
                             </label>
                             <input
@@ -68,13 +72,13 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 autoComplete="email"
-                                className="h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                placeholder="admin@example.com"
+                                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder-ink-500 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
+                                placeholder="you@company.com"
                             />
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                            <label className="mb-1.5 block text-sm font-medium text-ink-300">
                                 Password
                             </label>
                             <input
@@ -83,7 +87,7 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 autoComplete="current-password"
-                                className="h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder-ink-500 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -91,7 +95,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-sm font-medium text-white shadow-brand transition-all hover:bg-brand-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isLoading ? (
                                 <>

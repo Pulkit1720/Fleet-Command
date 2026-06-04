@@ -1,9 +1,22 @@
 import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
+const geistSans = Geist({
+    subsets: ['latin'],
+    variable: '--font-sans',
+    display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+    subsets: ['latin'],
+    variable: '--font-mono',
+    display: 'swap',
+});
+
 export const metadata: Metadata = {
-    title: 'Fleet Command - Admin Dashboard',
-    description: 'Fleet Management System for Automation Business',
+    title: 'Fleet Command — Operations Dashboard',
+    description: 'Dispatch, track, and manage your field service fleet in one place.',
 };
 
 export default function RootLayout({
@@ -12,8 +25,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-            <body className="antialiased">{children}</body>
+        <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+            <body className="bg-canvas text-ink-900 antialiased">{children}</body>
         </html>
     );
 }

@@ -69,35 +69,35 @@ export default function AddressAutocomplete({
     return (
         <div ref={wrapperRef} className="relative">
             <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-400" />
                 <input
                     type="text"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setIsOpen(true)}
                     placeholder={placeholder}
-                    className={`h-11 w-full rounded-lg border bg-white pl-10 pr-10 text-sm focus:outline-none focus:ring-2 ${error
-                            ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                            : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
+                    className={`h-11 w-full rounded-xl border bg-surface pl-10 pr-10 text-sm text-ink-900 transition-colors focus:outline-none focus:ring-4 ${error
+                            ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10'
+                            : 'border-ink-200 focus:border-brand-400 focus:ring-brand-500/10'
                         }`}
                 />
                 {isLoading && (
-                    <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-slate-400" />
+                    <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-ink-400" />
                 )}
             </div>
 
-            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-1 text-sm text-rose-600">{error}</p>}
 
             {isOpen && suggestions.length > 0 && (
-                <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                <ul className="absolute z-50 mt-1.5 max-h-60 w-full animate-fade-in overflow-auto rounded-xl border border-ink-200 bg-surface py-1 shadow-lg">
                     {suggestions.map((suggestion) => (
                         <li
                             key={suggestion.id}
                             onClick={() => handleSelect(suggestion)}
-                            className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-slate-50"
+                            className="flex cursor-pointer items-start gap-3 px-4 py-2.5 transition-colors hover:bg-brand-50"
                         >
-                            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
-                            <span className="text-sm text-slate-700">{suggestion.address}</span>
+                            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400" />
+                            <span className="text-sm text-ink-700">{suggestion.address}</span>
                         </li>
                     ))}
                 </ul>

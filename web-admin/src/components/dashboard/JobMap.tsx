@@ -71,14 +71,15 @@ export default function JobMap({ jobs, selectedJob, onSelectJob }: JobMapProps) 
             // Color based on priority
             switch (job.priority) {
                 case 'Emergency':
-                    el.style.backgroundColor = '#dc2626';
+                    el.style.backgroundColor = '#e11d48';
                     break;
                 case 'Normal':
-                    el.style.backgroundColor = '#2563eb';
+                    el.style.backgroundColor = '#4f46e5';
                     break;
                 default:
                     el.style.backgroundColor = '#64748b';
             }
+            el.style.transition = 'transform 150ms ease';
 
             // Highlight selected job
             if (selectedJob?.id === job.id) {
@@ -129,14 +130,14 @@ export default function JobMap({ jobs, selectedJob, onSelectJob }: JobMapProps) 
 
     if (!MAPBOX_TOKEN) {
         return (
-            <div className="flex h-full flex-col items-center justify-center gap-3 bg-slate-50">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200">
-                    <MapPin className="h-6 w-6 text-slate-400" />
+            <div className="flex h-full flex-col items-center justify-center gap-3 bg-ink-50">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ink-200">
+                    <MapPin className="h-6 w-6 text-ink-400" />
                 </div>
                 <div className="text-center">
-                    <p className="font-medium text-slate-700">Map unavailable</p>
-                    <p className="mt-1 text-sm text-slate-400">
-                        Set <code className="rounded bg-slate-200 px-1 py-0.5 text-xs">NEXT_PUBLIC_MAPBOX_TOKEN</code> to enable the live map.
+                    <p className="font-medium text-ink-700">Map unavailable</p>
+                    <p className="mt-1 text-sm text-ink-400">
+                        Set <code className="rounded bg-ink-200 px-1 py-0.5 font-mono text-xs">NEXT_PUBLIC_MAPBOX_TOKEN</code> to enable the live map.
                     </p>
                 </div>
             </div>

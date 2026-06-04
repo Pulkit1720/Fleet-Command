@@ -8,9 +8,9 @@ export default function DashboardLayout({
 }) {
     return (
         <AuthProvider>
-            <div className="min-h-screen bg-content-bg">
+            <div className="min-h-dvh bg-canvas">
                 <Sidebar />
-                <main className="ml-64">{children}</main>
+                <main className="ml-[264px] min-h-dvh">{children}</main>
             </div>
         </AuthProvider>
     );

@@ -1,42 +1,79 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-    --sidebar-width: 256px;
+    --sidebar-width: 264px;
+
+    /* Tinted, layered shadows (slate-hued rather than pure black) */
+    --shadow-xs: 0 1px 2px -1px rgb(15 23 42 / 0.08);
+    --shadow-sm: 0 1px 3px -1px rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.04);
+    --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 6px -2px rgb(15 23 42 / 0.05);
+    --shadow-lg: 0 16px 40px -12px rgb(15 23 42 / 0.18), 0 4px 12px -4px rgb(15 23 42 / 0.08);
+    --shadow-brand: 0 8px 24px -8px rgb(79 70 229 / 0.45);
 }
 
-body {
-    font-family: 'Inter', system-ui, sans-serif;
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: var(--font-sans), system-ui, sans-serif;
+        /* Subtle ambient depth on the canvas so flat sections don't read as sterile */
+        background-image:
+            radial-gradient(1200px 600px at 100% -10%, rgb(79 70 229 / 0.05), transparent 60%),
+            radial-gradient(900px 500px at -10% 110%, rgb(14 165 233 / 0.04), transparent 55%);
+        background-attachment: fixed;
+    }
+
+    /* Tabular figures for data-heavy UI */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: 'tnum' 1;
+    }
+
+    /* Consistent, visible focus for keyboard users */
+    :focus-visible {
+        outline: 2px solid theme('colors.brand.500');
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+
+    ::selection {
+        background: theme('colors.brand.500' / 20%);
+    }
 }
 
-/* Mapbox styles */
+/* Mapbox */
 .mapboxgl-map {
     font-family: inherit;
 }
 
 .mapboxgl-popup-content {
     padding: 12px 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
 }
 
-/* Custom scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
+    background: theme('colors.ink.300');
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: theme('colors.ink.400');
+    background-clip: content-box;
 }

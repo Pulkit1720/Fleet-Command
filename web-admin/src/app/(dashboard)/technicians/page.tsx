@@ -27,20 +27,20 @@ export default function TechniciansPage() {
     return (
         <>
             <Header title="Technicians" subtitle="Manage your field team" />
-            <div className="p-6">
+            <div className="mx-auto max-w-7xl p-7">
                 <div className="mb-6 flex items-center justify-between">
                     {!isLoading && !error && (
-                        <p className="text-sm text-slate-500">
-                            {technicians.length} technician{technicians.length !== 1 ? 's' : ''}
+                        <p className="text-sm text-ink-500">
+                            <span className="tabular font-medium text-ink-700">{technicians.length}</span> technician{technicians.length !== 1 ? 's' : ''}
                         </p>
                     )}
                     <div className="ml-auto">
                         <button
                             onClick={() => setShowInviteModal(true)}
-                            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
+                            className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-brand active:scale-[0.98]"
                         >
                             <UserPlus className="h-4 w-4" />
-                            Invite Technician
+                            Invite technician
                         </button>
                     </div>
                 </div>
@@ -48,24 +48,24 @@ export default function TechniciansPage() {
                 {isLoading && (
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-40 animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />
+                            <div key={i} className="h-44 animate-pulse rounded-2xl border border-ink-200 bg-ink-100/70" />
                         ))}
                     </div>
                 )}
 
                 {error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
                         {error}
                     </div>
                 )}
 
                 {!isLoading && !error && technicians.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="mb-4 rounded-full bg-slate-100 p-4">
-                            <User className="h-8 w-8 text-slate-400" />
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-surface/50 py-16 text-center">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-100">
+                            <User className="h-6 w-6 text-ink-400" />
                         </div>
-                        <p className="text-lg font-medium text-slate-900">No technicians yet</p>
-                        <p className="mt-1 text-sm text-slate-500">Invite a technician to get started.</p>
+                        <p className="font-medium text-ink-900">No technicians yet</p>
+                        <p className="mt-1 text-sm text-ink-500">Invite a technician to get started.</p>
                     </div>
                 )}
 
@@ -122,13 +122,14 @@ function InviteModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 className="text-base font-semibold text-slate-900">Invite Technician</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md animate-scale-in rounded-3xl border border-ink-200 bg-surface shadow-lg">
+                <div className="flex items-center justify-between border-b border-ink-100 px-6 py-4">
+                    <h2 className="text-base font-medium text-ink-900">Invite technician</h2>
                     <button
                         onClick={onClose}
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        aria-label="Close"
+                        className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -136,20 +137,20 @@ function InviteModal({
 
                 <form onSubmit={handleSubmit} className="space-y-4 p-6">
                     {error && (
-                        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                            Invite sent! The technician will receive an email to set up their account.
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                            Invite sent. The technician will receive an email to set up their account.
                         </div>
                     )}
 
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Full Name <span className="text-red-500">*</span>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
+                            Full name <span className="text-rose-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -157,14 +158,14 @@ function InviteModal({
                             onChange={(e) => setFullName(e.target.value)}
                             required
                             disabled={isLoading || success}
-                            className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-                            placeholder="Jane Smith"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-3.5 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50"
+                            placeholder="Maya Rodriguez"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Email <span className="text-red-500">*</span>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
+                            Email <span className="text-rose-500">*</span>
                         </label>
                         <input
                             type="email"
@@ -172,13 +173,13 @@ function InviteModal({
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             disabled={isLoading || success}
-                            className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-                            placeholder="jane@example.com"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-3.5 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50"
+                            placeholder="maya@company.com"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
                             Phone
                         </label>
                         <input
@@ -186,8 +187,8 @@ function InviteModal({
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             disabled={isLoading || success}
-                            className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-                            placeholder="+1 555 000 0000"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-3.5 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50"
+                            placeholder="+1 (312) 847-1928"
                         />
                     </div>
 
@@ -196,14 +197,14 @@ function InviteModal({
                             type="button"
                             onClick={onClose}
                             disabled={isLoading}
-                            className="flex-1 rounded-lg border border-slate-300 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                            className="flex-1 rounded-xl border border-ink-200 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading || success}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-60"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 active:scale-[0.98] disabled:opacity-60"
                         >
                             {isLoading ? (
                                 <>
@@ -211,7 +212,7 @@ function InviteModal({
                                     Sending…
                                 </>
                             ) : (
-                                'Send Invite'
+                                'Send invite'
                             )}
                         </button>
                     </div>
@@ -233,51 +234,51 @@ function TechnicianCard({ tech }: { tech: Technician }) {
         : null;
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div className="mb-4 flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50">
-                        <User className="h-5 w-5 text-blue-600" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50">
+                        <User className="h-5 w-5 text-brand-600" />
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900">{tech.full_name}</p>
-                        <p className="text-xs text-slate-500">ID: {tech.id.slice(0, 8)}…</p>
+                        <p className="font-medium text-ink-900">{tech.full_name}</p>
+                        <p className="tabular text-xs text-ink-400">ID: {tech.id.slice(0, 8)}…</p>
                     </div>
                 </div>
                 <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
                         tech.is_active
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-slate-100 text-slate-500'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-ink-100 text-ink-500'
                     }`}
                 >
                     <Circle
-                        className={`h-2 w-2 fill-current ${tech.is_active ? 'text-green-500' : 'text-slate-400'}`}
+                        className={`h-2 w-2 fill-current ${tech.is_active ? 'text-emerald-500' : 'text-ink-400'}`}
                     />
                     {tech.is_active ? 'Active' : 'Inactive'}
                 </span>
             </div>
 
             <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Mail className="h-4 w-4 flex-shrink-0 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm text-ink-600">
+                    <Mail className="h-4 w-4 flex-shrink-0 text-ink-400" />
                     <span className="truncate">{tech.email}</span>
                 </div>
                 {tech.phone && (
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Phone className="h-4 w-4 flex-shrink-0 text-slate-400" />
-                        <span>{tech.phone}</span>
+                    <div className="flex items-center gap-2 text-sm text-ink-600">
+                        <Phone className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                        <span className="tabular">{tech.phone}</span>
                     </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <MapPin className="h-4 w-4 flex-shrink-0 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm text-ink-500">
+                    <MapPin className="h-4 w-4 flex-shrink-0 text-ink-400" />
                     {hasLocation ? (
-                        <span>
+                        <span className="tabular">
                             {tech.current_lat!.toFixed(4)}, {tech.current_lng!.toFixed(4)}
-                            {lastSeen && <span className="ml-1 text-xs text-slate-400">· {lastSeen}</span>}
+                            {lastSeen && <span className="ml-1 text-xs text-ink-400">· {lastSeen}</span>}
                         </span>
                     ) : (
-                        <span className="text-slate-400">Location not available</span>
+                        <span className="text-ink-400">Location not available</span>
                     )}
                 </div>
             </div>

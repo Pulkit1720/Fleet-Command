@@ -10,6 +10,7 @@ import {
     formatDate,
     formatTime,
 } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface JobCardProps {
     job: Job;
@@ -21,20 +22,24 @@ export default function JobCard({ job, onClick, isSelected }: JobCardProps) {
     return (
         <div
             onClick={onClick}
-            className={`cursor-pointer rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md ${isSelected ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200'
-                }`}
+            className={cn(
+                'cursor-pointer rounded-2xl border bg-surface p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+                isSelected
+                    ? 'border-brand-400 ring-4 ring-brand-500/10'
+                    : 'border-ink-200 hover:border-ink-300'
+            )}
         >
             {/* Header */}
-            <div className="mb-3 flex items-start justify-between">
-                <div>
-                    <p className="font-semibold text-slate-900">{job.client_name}</p>
-                    <p className="text-sm text-slate-500">#{job.job_number}</p>
+            <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="truncate font-medium text-ink-900">{job.client_name}</p>
+                    <p className="tabular text-sm text-ink-400">#{job.job_number}</p>
                 </div>
-                <Badge className={getPriorityColor(job.priority)}>{job.priority}</Badge>
+                <Badge className={cn('border', getPriorityColor(job.priority))}>{job.priority}</Badge>
             </div>
 
             {/* Badges */}
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-3 flex flex-wrap gap-1.5">
                 <Badge className={getJobTypeColor(job.job_type)} variant="outline">
                     {job.job_type}
                 </Badge>
@@ -44,23 +49,23 @@ export default function JobCard({ job, onClick, isSelected }: JobCardProps) {
             </div>
 
             {/* Address */}
-            <div className="mb-3 flex items-start gap-2 text-sm text-slate-600">
-                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+            <div className="mb-3 flex items-start gap-2 text-sm text-ink-600">
+                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-400" />
                 <span className="line-clamp-2">{job.site_address}</span>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                    <Clock className="h-4 w-4" />
-                    <span>{formatDate(job.scheduled_date)}</span>
+            <div className="flex items-center justify-between border-t border-ink-100 pt-3">
+                <div className="flex items-center gap-1.5 text-sm text-ink-500">
+                    <Clock className="h-4 w-4 text-ink-400" />
+                    <span className="tabular">{formatDate(job.scheduled_date)}</span>
                     {job.scheduled_time_start && (
-                        <span>at {formatTime(job.scheduled_time_start)}</span>
+                        <span className="tabular">· {formatTime(job.scheduled_time_start)}</span>
                     )}
                 </div>
                 {job.assigned_technician && (
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                        <User className="h-4 w-4" />
+                    <div className="flex items-center gap-1.5 text-sm text-ink-500">
+                        <User className="h-4 w-4 text-ink-400" />
                         <span>{job.assigned_technician.full_name.split(' ')[0]}</span>
                     </div>
                 )}

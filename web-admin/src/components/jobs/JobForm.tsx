@@ -116,17 +116,17 @@ export default function JobForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {errors.submit && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
                     {errors.submit}
                 </div>
             )}
 
             {/* Client Information */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-medium text-slate-900">Client Information</h3>
+            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-semibold text-ink-900">Client Information</h3>
                 <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
                             Client Name *
                         </label>
                         <input
@@ -135,48 +135,48 @@ export default function JobForm() {
                             value={formData.client_name}
                             onChange={handleChange}
                             className={`h-11 w-full rounded-lg border px-4 text-sm focus:outline-none focus:ring-2 ${errors.client_name
-                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
+                                ? 'border-rose-300 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10'
+                                : 'border-ink-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10'
                                 }`}
                         />
                         {errors.client_name && (
-                            <p className="mt-1 text-sm text-red-600">{errors.client_name}</p>
+                            <p className="mt-1 text-sm text-rose-600">{errors.client_name}</p>
                         )}
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Phone</label>
                         <input
                             type="tel"
                             name="client_phone"
                             value={formData.client_phone}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Email</label>
                         <input
                             type="email"
                             name="client_email"
                             value={formData.client_email}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Job Details */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-medium text-slate-900">Job Details</h3>
+            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-semibold text-ink-900">Job Details</h3>
                 <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Job Type</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Job Type</label>
                         <select
                             name="job_type"
                             value={formData.job_type}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         >
                             {JOB_TYPES.map((type) => (
                                 <option key={type} value={type}>
@@ -186,12 +186,12 @@ export default function JobForm() {
                         </select>
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Priority</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Priority</label>
                         <select
                             name="priority"
                             value={formData.priority}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         >
                             {PRIORITIES.map((p) => (
                                 <option key={p} value={p}>
@@ -201,14 +201,14 @@ export default function JobForm() {
                         </select>
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
                             Assign Technician
                         </label>
                         <select
                             name="assigned_technician_id"
                             value={formData.assigned_technician_id}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         >
                             <option value="">Unassigned</option>
                             {technicians.map((tech) => (
@@ -220,22 +220,22 @@ export default function JobForm() {
                     </div>
                 </div>
                 <div className="mt-4">
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Description</label>
+                    <label className="mb-1.5 block text-sm font-medium text-ink-700">Description</label>
                     <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
                         rows={3}
-                        className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                     />
                 </div>
             </div>
 
             {/* Location */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-medium text-slate-900">Location</h3>
+            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-semibold text-ink-900">Location</h3>
                 <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label className="mb-1.5 block text-sm font-medium text-ink-700">
                         Site Address *
                     </label>
                     <AddressAutocomplete
@@ -246,7 +246,7 @@ export default function JobForm() {
                         error={errors.site_address}
                     />
                     {formData.lat && formData.lng && (
-                        <p className="mt-2 text-xs text-slate-500">
+                        <p className="mt-2 text-xs text-ink-500">
                             📍 Coordinates: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
                         </p>
                     )}
@@ -254,47 +254,47 @@ export default function JobForm() {
             </div>
 
             {/* Schedule */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-medium text-slate-900">Schedule</h3>
+            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-semibold text-ink-900">Schedule</h3>
                 <div className="grid gap-4 md:grid-cols-4">
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Date *</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Date *</label>
                         <input
                             type="date"
                             name="scheduled_date"
                             value={formData.scheduled_date}
                             onChange={handleChange}
                             className={`h-11 w-full rounded-lg border px-4 text-sm focus:outline-none focus:ring-2 ${errors.scheduled_date
-                                ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                                : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100'
+                                ? 'border-rose-300 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10'
+                                : 'border-ink-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10'
                                 }`}
                         />
                         {errors.scheduled_date && (
-                            <p className="mt-1 text-sm text-red-600">{errors.scheduled_date}</p>
+                            <p className="mt-1 text-sm text-rose-600">{errors.scheduled_date}</p>
                         )}
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Start Time</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Start Time</label>
                         <input
                             type="time"
                             name="scheduled_time_start"
                             value={formData.scheduled_time_start}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">End Time</label>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">End Time</label>
                         <input
                             type="time"
                             name="scheduled_time_end"
                             value={formData.scheduled_time_end}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
                             Duration (min)
                         </label>
                         <input
@@ -304,22 +304,22 @@ export default function JobForm() {
                             onChange={handleChange}
                             min={15}
                             step={15}
-                            className="h-11 w-full rounded-lg border border-slate-300 px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Notes */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-medium text-slate-900">Additional Notes</h3>
+            <div className="rounded-2xl border border-ink-200 bg-surface p-6 shadow-sm">
+                <h3 className="mb-4 text-base font-semibold text-ink-900">Additional Notes</h3>
                 <textarea
                     name="notes"
                     value={formData.notes}
                     onChange={handleChange}
                     rows={3}
                     placeholder="Any special instructions or notes..."
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-ink-200 px-4 py-3 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
                 />
             </div>
 

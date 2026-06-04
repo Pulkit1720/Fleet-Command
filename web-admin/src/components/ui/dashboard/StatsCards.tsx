@@ -11,32 +11,36 @@ interface StatsCardsProps {
 export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
     const cards = [
         {
-            name: 'Active Jobs',
+            name: 'Active jobs',
             value: stats ? stats.in_progress_count + stats.assigned_count : 0,
             icon: ClipboardList,
-            gradient: 'from-blue-600 to-blue-500',
-            iconBg: 'bg-white/20',
+            tint: 'text-brand-600',
+            tintBg: 'bg-brand-50',
+            accent: 'bg-brand-500',
         },
         {
             name: 'Pending',
             value: stats?.unassigned_count ?? 0,
             icon: Clock,
-            gradient: 'from-amber-500 to-orange-400',
-            iconBg: 'bg-white/20',
+            tint: 'text-amber-600',
+            tintBg: 'bg-amber-50',
+            accent: 'bg-amber-400',
         },
         {
             name: 'Emergency',
             value: stats?.emergency_count ?? 0,
             icon: AlertTriangle,
-            gradient: 'from-red-600 to-rose-500',
-            iconBg: 'bg-white/20',
+            tint: 'text-rose-600',
+            tintBg: 'bg-rose-50',
+            accent: 'bg-rose-500',
         },
         {
-            name: 'Completed Today',
+            name: 'Completed today',
             value: stats?.completed_count ?? 0,
             icon: CheckCircle,
-            gradient: 'from-emerald-600 to-green-500',
-            iconBg: 'bg-white/20',
+            tint: 'text-emerald-600',
+            tintBg: 'bg-emerald-50',
+            accent: 'bg-emerald-500',
         },
     ];
 
@@ -45,21 +49,19 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
             {cards.map((card) => (
                 <div
                     key={card.name}
-                    className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-5 shadow-lg`}
+                    className="group relative overflow-hidden rounded-2xl border border-ink-200 bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
                 >
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-white/80">{card.name}</p>
-                            <p className="mt-1 text-4xl font-bold text-white">
-                                {isLoading ? '—' : card.value}
-                            </p>
-                        </div>
-                        <div className={`rounded-xl ${card.iconBg} p-2.5`}>
-                            <card.icon className="h-5 w-5 text-white" />
+                    {/* slim accent rail */}
+                    <span className={`absolute inset-y-0 left-0 w-1 ${card.accent} opacity-80`} />
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-ink-500">{card.name}</p>
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${card.tintBg}`}>
+                            <card.icon className={`h-[18px] w-[18px] ${card.tint}`} strokeWidth={2} />
                         </div>
                     </div>
-                    {/* subtle shine */}
-                    <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
+                    <p className="tabular mt-3 text-[32px] font-semibold leading-none tracking-tight text-ink-900">
+                        {isLoading ? <span className="text-ink-300">—</span> : card.value}
+                    </p>
                 </div>
             ))}
         </div>

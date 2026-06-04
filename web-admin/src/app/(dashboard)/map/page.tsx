@@ -21,9 +21,9 @@ export default function MapPage() {
 
     return (
         <>
-            <Header title="Live Map" subtitle="Track jobs and technicians in real time" />
-            <div className="flex gap-0 p-6" style={{ height: 'calc(100vh - 80px)' }}>
-                <div className="w-80 flex-shrink-0 overflow-y-auto pr-4">
+            <Header title="Live map" subtitle="Track jobs and technicians in real time" />
+            <div className="flex gap-4 p-7" style={{ height: 'calc(100dvh - 72px)' }}>
+                <div className="w-80 flex-shrink-0 overflow-y-auto pr-1">
                     <JobList
                         jobs={jobs}
                         selectedJobId={selectedJob?.id}
@@ -31,7 +31,7 @@ export default function MapPage() {
                         isLoading={isLoading}
                     />
                 </div>
-                <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex-1 overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
                     <JobMap
                         jobs={jobs}
                         selectedJob={selectedJob}
