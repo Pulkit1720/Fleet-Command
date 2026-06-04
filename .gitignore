@@ -16,3 +16,6 @@ ONBOARDING.md
 # Backend service config (contains secrets) — keep local only
 env*.yaml
 backend/env*.yaml
+# iCloud "Desktop & Documents" conflict-copy duplicates (e.g. "middleware 3.ts")
+* [0-9]
+* [0-9].*
