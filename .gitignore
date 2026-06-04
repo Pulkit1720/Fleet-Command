@@ -13,3 +13,6 @@ CLAUDE.md
 ONBOARDING.md
 *-context.md
 *-prompt.md
+# Backend service config (contains secrets) — keep local only
+env*.yaml
+backend/env*.yaml
