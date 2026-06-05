@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockFrom, mockInviteUserByEmail } = vi.hoisted(() => ({
+const { mockFrom, mockGenerateLink, mockSendInvite } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
-  mockInviteUserByEmail: vi.fn(),
+  mockGenerateLink: vi.fn(),
+  mockSendInvite: vi.fn(),
 }));
 
 vi.mock('../../config/supabase.js', () => ({
@@ -10,7 +11,7 @@ vi.mock('../../config/supabase.js', () => ({
     from: (...args) => mockFrom(...args),
     auth: {
       admin: {
-        inviteUserByEmail: (...args) => mockInviteUserByEmail(...args),
+        generateLink: (...args) => mockGenerateLink(...args),
       },
     },
   },
@@ -18,6 +19,10 @@ vi.mock('../../config/supabase.js', () => ({
 
 vi.mock('../../services/truthEngineService.js', () => ({
   calculateDistance: vi.fn(() => 1000),
+}));
+
+vi.mock('../../services/emailService.js', () => ({
+  sendTechnicianInvite: (...args) => mockSendInvite(...args),
 }));
 
 import { calculateDistance } from '../../services/truthEngineService.js';
@@ -138,7 +143,11 @@ describe('techniciansController', () => {
   });
 
   describe('inviteTechnician', () => {
-    const adminUser = { id: 'admin-1', user_metadata: { role: 'admin' } };
+    const adminUser = {
+      id: 'admin-1',
+      email: 'admin@example.com',
+      user_metadata: { role: 'admin', full_name: 'Dana Admin' },
+    };
 
     it('returns 403 when caller is not an admin', async () => {
       const res = mockRes();
@@ -210,10 +219,14 @@ describe('techniciansController', () => {
           error: null,
         });
       });
-      mockInviteUserByEmail.mockResolvedValue({
-        data: { user: { id: 'auth-user-1' } },
+      mockGenerateLink.mockResolvedValue({
+        data: {
+          user: { id: 'auth-user-1' },
+          properties: { action_link: 'https://supabase.test/verify?token_hash=abc&type=invite' },
+        },
         error: null,
       });
+      mockSendInvite.mockResolvedValue();
 
       const res = mockRes();
       const next = vi.fn();
@@ -231,11 +244,22 @@ describe('techniciansController', () => {
         next
       );
 
-      expect(mockInviteUserByEmail).toHaveBeenCalledWith(
-        'new@test.com',
+      expect(mockGenerateLink).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { full_name: 'New Tech', role: 'technician' },
-          redirectTo: 'http://localhost:3000/auth/confirm',
+          type: 'invite',
+          email: 'new@test.com',
+          options: expect.objectContaining({
+            data: { full_name: 'New Tech', role: 'technician' },
+            redirectTo: 'http://localhost:3000/auth/confirm',
+          }),
+        })
+      );
+      expect(mockSendInvite).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'new@test.com',
+          full_name: 'New Tech',
+          inviterName: 'Dana Admin',
+          inviteUrl: 'https://supabase.test/verify?token_hash=abc&type=invite',
         })
       );
       expect(res.status).toHaveBeenCalledWith(201);
