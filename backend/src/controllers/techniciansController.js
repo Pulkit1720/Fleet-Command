@@ -1,5 +1,6 @@
 import supabase from '../config/supabase.js';
 import { calculateDistance } from '../services/truthEngineService.js';
+import { sendTechnicianInvite } from '../services/emailService.js';
 
 // Get all technicians
 export async function getTechnicians(req, res, next) {
@@ -99,20 +100,33 @@ export async function inviteTechnician(req, res, next) {
 
     const webAdminUrl = process.env.WEB_ADMIN_URL || 'http://localhost:8080';
 
-    // inviteUserByEmail sends the email via Supabase's own provider (no Gmail needed)
-    // and gracefully handles re-inviting an existing auth user
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { full_name, role: 'technician' },
-      redirectTo: `${webAdminUrl}/auth/confirm`,
+    // The inviting admin's display name powers the "<name> invited you" email.
+    const inviterName =
+      req.user?.user_metadata?.full_name?.trim() ||
+      req.user?.email ||
+      null;
+
+    // generateLink creates the auth user and mints the invite action link WITHOUT
+    // sending an email — we send it ourselves via SMTP so we control the sender
+    // domain, branding, and personalization.
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: {
+        data: { full_name, role: 'technician' },
+        redirectTo: `${webAdminUrl}/auth/confirm`,
+      },
     });
 
-    if (inviteError) throw inviteError;
+    if (linkError) throw linkError;
+
+    const inviteUrl = linkData?.properties?.action_link;
 
     // Create technician record linked to the new auth user, owned by this admin
     const { data: technician, error: techError } = await supabase
       .from('technicians')
       .insert({
-        user_id: inviteData.user?.id,
+        user_id: linkData.user?.id,
         admin_id: req.user.id,
         full_name,
         email,
@@ -123,6 +137,10 @@ export async function inviteTechnician(req, res, next) {
       .single();
 
     if (techError) throw techError;
+
+    // Deliver the invite. If email fails, surface it so the admin knows to retry
+    // rather than silently leaving the technician without a setup link.
+    await sendTechnicianInvite({ to: email, full_name, inviterName, inviteUrl });
 
     res.status(201).json(technician);
   } catch (error) {

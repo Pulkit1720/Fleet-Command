@@ -1,22 +1,34 @@
 import nodemailer from 'nodemailer';
 
+const smtpPort = Number(process.env.SMTP_PORT) || 465;
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST,
+  port: smtpPort,
+  secure: smtpPort === 465, // true for 465 (implicit TLS), false for 587 (STARTTLS)
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
-export async function sendTechnicianInvite({ to, full_name, inviteUrl }) {
+function buildFrom(inviterName) {
+  const address = process.env.INVITE_FROM_ADDRESS || process.env.SMTP_USER;
+  const display = inviterName ? `${inviterName} via Fleet Command` : 'Fleet Command';
+  return `"${display}" <${address}>`;
+}
+
+export async function sendTechnicianInvite({ to, full_name, inviterName, inviteUrl }) {
+  const inviter = inviterName?.trim() || 'Your team admin';
+
   await transporter.sendMail({
-    from: `"Fleet Command" <${process.env.GMAIL_USER}>`,
+    from: buildFrom(inviterName),
     to,
-    subject: 'You have been invited to Fleet Command',
+    subject: `${inviter} invited you to join their team on Fleet Command`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-        <h2 style="color: #1e293b;">Welcome to Fleet Command, ${full_name}!</h2>
-        <p style="color: #475569;">You've been invited as a technician. Click the button below to set up your password and get started.</p>
+        <h2 style="color: #1e293b;">${inviter} invited you to join their team</h2>
+        <p style="color: #475569;">Hi ${full_name || 'there'}, you've been invited as a technician on Fleet Command. Click the button below to set up your password and get started.</p>
         <a href="${inviteUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
           Set Up My Account
         </a>
