@@ -15,8 +15,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Fleet Command — Operations Dashboard',
+    title: 'Fleet Coordinate — Operations Dashboard',
     description: 'Dispatch, track, and manage your field service fleet in one place.',
+    icons: {
+        icon: '/logo-mark.png',
+        apple: '/logo-mark.png',
+    },
 };
 
 export default function RootLayout({

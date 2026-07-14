@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -45,10 +46,8 @@ export default function LoginScreen() {
             <View style={styles.inner}>
                 {/* Logo */}
                 <View style={styles.logoContainer}>
-                    <View style={styles.logoIcon}>
-                        <Ionicons name="car" size={32} color="#fff" />
-                    </View>
-                    <Text style={styles.appName}>Fleet Command</Text>
+                    <Image source={require('../assets/logo-mark.png')} style={styles.logoIcon} />
+                    <Text style={styles.appName}>Fleet Coordinate</Text>
                     <Text style={styles.appSubtitle}>Technician Portal</Text>
                 </View>
 
@@ -136,9 +135,8 @@ const styles = StyleSheet.create({
         width: 72,
         height: 72,
         borderRadius: 20,
-        backgroundColor: '#2563eb',
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
         marginBottom: 16,
     },
     appName: {

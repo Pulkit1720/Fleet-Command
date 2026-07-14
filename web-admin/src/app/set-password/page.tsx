@@ -51,7 +51,7 @@ export default function SetPasswordPage() {
                         <Truck className="h-7 w-7 text-white" strokeWidth={2.25} />
                     </div>
                     <div className="text-center">
-                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Command</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Coordinate</h1>
                         <p className="mt-1 text-sm text-ink-400">Operations dashboard</p>
                     </div>
                 </div>

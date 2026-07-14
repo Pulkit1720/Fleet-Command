@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,10 +54,8 @@ export default function SetPasswordScreen() {
         >
             <View style={styles.inner}>
                 <View style={styles.logoContainer}>
-                    <View style={styles.logoIcon}>
-                        <Ionicons name="car" size={32} color="#fff" />
-                    </View>
-                    <Text style={styles.appName}>Fleet Command</Text>
+                    <Image source={require('../assets/logo-mark.png')} style={styles.logoIcon} />
+                    <Text style={styles.appName}>Fleet Coordinate</Text>
                     <Text style={styles.appSubtitle}>Technician Portal</Text>
                 </View>
 
@@ -132,8 +131,8 @@ const styles = StyleSheet.create({
     inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
     logoContainer: { alignItems: 'center', marginBottom: 40 },
     logoIcon: {
-        width: 72, height: 72, borderRadius: 20, backgroundColor: '#2563eb',
-        alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+        width: 72, height: 72, borderRadius: 20,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', marginBottom: 16,
     },
     appName: { fontSize: 26, fontWeight: '700', color: '#fff' },
     appSubtitle: { fontSize: 14, color: '#64748b', marginTop: 4 },

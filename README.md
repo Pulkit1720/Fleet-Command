@@ -1,8 +1,8 @@
-# Fleet Command
+# Fleet Coordinate
 
 Full-stack field service management platform to dispatch technicians, track jobs in real time, and verify on-site updates with location checks.
 
-Fleet Command includes:
+Fleet Coordinate includes:
 - `web-admin/`: admin dashboard for job creation, assignment, dispatch map, and technician management.
 - `mobile-app/`: technician app to view assigned jobs and update status from the field.
 - `backend/`: Express API with auth, business rules, geofencing checks, and email invites.
@@ -148,7 +148,7 @@ Fleet-Command/
 
 ## Build Artifacts
 
-- Latest Android build artifact is currently tracked at `mobile-app/builds/fleet-command.apk`.
+- Latest Android build artifact is currently tracked at `mobile-app/builds/fleet-coordinate.apk`.
 
 ## Author
 

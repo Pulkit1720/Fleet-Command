@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Truck, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { signupAdmin } from '@/lib/api';
 
@@ -57,11 +58,15 @@ export default function SignupPage() {
             <div className="relative w-full max-w-sm animate-fade-in">
                 {/* Logo */}
                 <div className="mb-8 flex flex-col items-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand">
-                        <Truck className="h-7 w-7 text-white" strokeWidth={2.25} />
-                    </div>
+                    <Image
+                        src="/logo-mark.png"
+                        alt="Fleet Coordinate logo"
+                        width={56}
+                        height={56}
+                        className="rounded-2xl ring-1 ring-white/10"
+                    />
                     <div className="text-center">
-                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Command</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Coordinate</h1>
                         <p className="mt-1 text-sm text-ink-400">Create your workspace</p>
                     </div>
                 </div>

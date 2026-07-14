@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,7 +10,6 @@ import {
     Users,
     MapPin,
     Settings,
-    Truck,
     LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,11 +37,15 @@ export default function Sidebar() {
             <div className="flex h-full flex-col">
                 {/* Logo */}
                 <div className="flex h-20 items-center gap-3 px-6">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand">
-                        <Truck className="h-5 w-5 text-white" strokeWidth={2.25} />
-                    </div>
+                    <Image
+                        src="/logo-mark.png"
+                        alt="Fleet Coordinate logo"
+                        width={40}
+                        height={40}
+                        className="rounded-2xl ring-1 ring-white/10"
+                    />
                     <div>
-                        <h1 className="text-[15px] font-semibold tracking-tight text-white">Fleet Command</h1>
+                        <h1 className="text-[15px] font-semibold tracking-tight text-white">Fleet Coordinate</h1>
                         <p className="text-xs text-ink-400">Automation Services</p>
                     </div>
                 </div>

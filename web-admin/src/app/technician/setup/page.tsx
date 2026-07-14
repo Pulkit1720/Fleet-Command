@@ -50,7 +50,7 @@ export default function TechnicianSetupPage() {
                         <Truck className="h-7 w-7 text-white" strokeWidth={2.25} />
                     </div>
                     <div className="text-center">
-                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Command</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight text-white">Fleet Coordinate</h1>
                         <p className="mt-1 text-sm text-ink-400">Technician account setup</p>
                     </div>
                 </div>
@@ -71,7 +71,7 @@ export default function TechnicianSetupPage() {
                                     <div className="text-left">
                                         <p className="text-sm font-medium text-brand-200">Open the mobile app</p>
                                         <p className="mt-0.5 text-xs text-ink-400">
-                                            Download the Fleet Command app and log in with your email and new password.
+                                            Download the Fleet Coordinate app and log in with your email and new password.
                                         </p>
                                     </div>
                                 </div>
