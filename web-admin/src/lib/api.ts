@@ -1,4 +1,4 @@
-import { Job, JobStats, Technician, AddressSuggestion } from '@/types';
+import { Job, JobStats, Technician, AddressSuggestion, Client } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -118,5 +118,30 @@ export async function inviteTechnician(data: {
   return fetchApi('/technicians/invite', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+// Clients API
+export async function getClients(): Promise<Client[]> {
+  return fetchApi('/clients');
+}
+
+export async function createClient(data: Partial<Client>): Promise<Client> {
+  return fetchApi('/clients', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateClient(id: string, data: Partial<Client>): Promise<Client> {
+  return fetchApi(`/clients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteClient(id: string): Promise<{ ok: boolean }> {
+  return fetchApi(`/clients/${id}`, {
+    method: 'DELETE',
   });
 }

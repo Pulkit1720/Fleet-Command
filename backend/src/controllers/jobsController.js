@@ -51,6 +51,54 @@ function normalizeJobRecord(job) {
 const TECH_JOIN = 'assigned_technician(id, full_name, email, phone)';
 const TECH_JOIN_AVATAR = 'assigned_technician(id, full_name, email, phone, avatar_url)';
 
+// Fallback durations by job type, used when no explicit duration or
+// start/end times are provided.
+const DEFAULT_DURATION_MINUTES = {
+    'Repair': 120,
+    'Install': 180,
+    'Ongoing Install': 240,
+    'Maintenance': 90,
+    'Inspection': 60,
+};
+
+// Duration is derived automatically: explicit value > scheduled time window
+// > job-type default.
+function deriveDurationMinutes({
+    estimated_duration_minutes,
+    scheduled_time_start,
+    scheduled_time_end,
+    job_type,
+}) {
+    const explicit = Number(estimated_duration_minutes);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    const start = timeValueToMinutes(scheduled_time_start);
+    const end = timeValueToMinutes(scheduled_time_end);
+    if (start != null && end != null && end > start) return end - start;
+
+    return DEFAULT_DURATION_MINUTES[job_type] ?? 120;
+}
+
+// Date-based job numbers: YYMMDDNNN (e.g. 260715001 = first job created on
+// 2026-07-15). Fits comfortably in the existing integer column.
+async function nextJobNumber() {
+    const yymmdd = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+    const prefix = Number(yymmdd) * 1000;
+
+    const { data, error } = await supabase
+        .from('jobs')
+        .select('job_number')
+        .gte('job_number', prefix)
+        .lte('job_number', prefix + 999)
+        .order('job_number', { ascending: false })
+        .limit(1);
+
+    if (error) throw error;
+
+    const last = Array.isArray(data) && data[0] ? Number(data[0].job_number) : null;
+    return last ? last + 1 : prefix + 1;
+}
+
 // Get all jobs with optional filters
 export async function getJobs(req, res, next) {
     try {
@@ -142,9 +190,17 @@ export async function createJob(req, res, next) {
             finalAddress = geocoded.formattedAddress;
         }
 
+        const durationMinutes = deriveDurationMinutes({
+            estimated_duration_minutes,
+            scheduled_time_start,
+            scheduled_time_end,
+            job_type,
+        });
+
         const { data, error } = await supabase
             .from('jobs')
             .insert({
+                job_number: await nextJobNumber(),
                 client_name,
                 client_phone,
                 client_email,
@@ -159,7 +215,7 @@ export async function createJob(req, res, next) {
                 scheduled_date,
                 scheduled_time_start,
                 scheduled_time_end,
-                estimated_duration_minutes: minutesToTimeValue(estimated_duration_minutes),
+                estimated_duration_minutes: minutesToTimeValue(durationMinutes),
                 notes,
                 created_by: req.user.id
             })

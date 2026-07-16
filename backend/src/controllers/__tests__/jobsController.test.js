@@ -49,8 +49,11 @@ function chainable(finalResult) {
     insert: vi.fn(),
     update: vi.fn(),
     eq: vi.fn(),
+    gte: vi.fn(),
+    lte: vi.fn(),
     order: vi.fn(),
     range: vi.fn(),
+    limit: vi.fn(),
     in: vi.fn(),
     single: vi.fn().mockResolvedValue(finalResult),
     then(onFulfilled, onRejected) {
@@ -61,8 +64,11 @@ function chainable(finalResult) {
   chain.insert.mockReturnValue(chain);
   chain.update.mockReturnValue(chain);
   chain.eq.mockReturnValue(chain);
+  chain.gte.mockReturnValue(chain);
+  chain.lte.mockReturnValue(chain);
   chain.order.mockReturnValue(chain);
   chain.range.mockReturnValue(chain);
+  chain.limit.mockReturnValue(chain);
   chain.in.mockReturnValue(chain);
   return chain;
 }
@@ -217,6 +223,69 @@ describe('jobsController', () => {
           status: 'Assigned',
           assigned_technician: 'tech-1',
         })
+      );
+    });
+
+    it('generates a date-based job number (YYMMDDNNN)', async () => {
+      const chain = chainable({ data: { id: 'j1' }, error: null });
+      mockFrom.mockReturnValue(chain);
+
+      const req = {
+        user: { id: 'admin-1' },
+        body: { client_name: 'Client', site_address: '123 St', lat: 1, lng: 2 },
+      };
+
+      await createJob(req, mockRes(), mockNext());
+
+      const prefix =
+        Number(new Date().toISOString().slice(2, 10).replace(/-/g, '')) * 1000;
+      expect(chain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ job_number: prefix + 1 })
+      );
+    });
+
+    it('derives duration from the scheduled time window when not provided', async () => {
+      const chain = chainable({ data: { id: 'j1' }, error: null });
+      mockFrom.mockReturnValue(chain);
+
+      const req = {
+        user: { id: 'admin-1' },
+        body: {
+          client_name: 'Client',
+          site_address: '123 St',
+          lat: 1,
+          lng: 2,
+          scheduled_time_start: '10:00',
+          scheduled_time_end: '11:30',
+        },
+      };
+
+      await createJob(req, mockRes(), mockNext());
+
+      expect(chain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ estimated_duration_minutes: '01:30:00' })
+      );
+    });
+
+    it('falls back to the job-type default duration', async () => {
+      const chain = chainable({ data: { id: 'j1' }, error: null });
+      mockFrom.mockReturnValue(chain);
+
+      const req = {
+        user: { id: 'admin-1' },
+        body: {
+          client_name: 'Client',
+          site_address: '123 St',
+          lat: 1,
+          lng: 2,
+          job_type: 'Inspection',
+        },
+      };
+
+      await createJob(req, mockRes(), mockNext());
+
+      expect(chain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ estimated_duration_minutes: '01:00:00' })
       );
     });
   });

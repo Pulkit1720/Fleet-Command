@@ -107,7 +107,13 @@ export default function JobsPage() {
                     </p>
                 )}
 
-                <JobList jobs={filteredJobs} isLoading={isLoading} />
+                <JobList
+                    jobs={filteredJobs}
+                    isLoading={isLoading}
+                    onJobUpdated={(updated) =>
+                        setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)))
+                    }
+                />
             </div>
         </>
     );

@@ -8,6 +8,7 @@ import {
     ClipboardList,
     Plus,
     Users,
+    Building2,
     MapPin,
     Settings,
     LogOut,
@@ -20,6 +21,7 @@ const navigation = [
     { name: 'All Jobs', href: '/jobs', icon: ClipboardList },
     { name: 'Create Job', href: '/create-job', icon: Plus },
     { name: 'Technicians', href: '/technicians', icon: Users },
+    { name: 'Clients', href: '/clients', icon: Building2 },
     { name: 'Live Map', href: '/map', icon: MapPin },
     { name: 'Settings', href: '/settings', icon: Settings },
 ];

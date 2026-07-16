@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createJob, getTechnicians } from '@/lib/api';
 import { Technician, JobType, JobPriority, AddressSuggestion } from '@/types';
+import { deriveDurationMinutes, formatDurationMinutes } from '@/lib/utils';
 import AddressAutocomplete from './AddressAutocomplete';
 import Button from '@/components/ui/Button';
 
@@ -22,7 +23,6 @@ type JobFormData = {
     scheduled_date: string;
     scheduled_time_start: string;
     scheduled_time_end: string;
-    estimated_duration_minutes: number;
     notes: string;
 };
 
@@ -49,9 +49,19 @@ export default function JobForm() {
         scheduled_date: '',
         scheduled_time_start: '',
         scheduled_time_end: '',
-        estimated_duration_minutes: 60,
         notes: '',
     });
+
+    // Duration is computed automatically from the scheduled time window,
+    // falling back to a per-job-type default.
+    const autoDurationMinutes = deriveDurationMinutes(
+        formData.job_type,
+        formData.scheduled_time_start,
+        formData.scheduled_time_end
+    );
+    const durationFromSchedule =
+        Boolean(formData.scheduled_time_start && formData.scheduled_time_end) &&
+        formData.scheduled_time_end > formData.scheduled_time_start;
 
     useEffect(() => {
         getTechnicians().then(setTechnicians).catch(console.error);
@@ -61,10 +71,8 @@ export default function JobForm() {
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target;
-        const nextValue =
-            name === 'estimated_duration_minutes' ? Number(value) : value;
 
-        setFormData((prev) => ({ ...prev, [name]: nextValue }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
         }
@@ -100,6 +108,7 @@ export default function JobForm() {
             await createJob({
                 ...formData,
                 assigned_technician_id: formData.assigned_technician_id || undefined,
+                estimated_duration_minutes: autoDurationMinutes,
             });
             router.push('/');
         } catch (err) {
@@ -295,17 +304,16 @@ export default function JobForm() {
                     </div>
                     <div>
                         <label className="mb-1.5 block text-sm font-medium text-ink-700">
-                            Duration (min)
+                            Duration (auto)
                         </label>
-                        <input
-                            type="number"
-                            name="estimated_duration_minutes"
-                            value={formData.estimated_duration_minutes}
-                            onChange={handleChange}
-                            min={15}
-                            step={15}
-                            className="h-11 w-full rounded-xl border border-ink-200 px-4 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
-                        />
+                        <div className="flex h-11 w-full items-center rounded-xl border border-ink-200 bg-ink-50 px-4 text-sm text-ink-700">
+                            {formatDurationMinutes(autoDurationMinutes)}
+                        </div>
+                        <p className="mt-1 text-xs text-ink-400">
+                            {durationFromSchedule
+                                ? 'Calculated from start and end time'
+                                : `Default for ${formData.job_type} jobs`}
+                        </p>
                     </div>
                 </div>
             </div>

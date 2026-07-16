@@ -58,6 +58,26 @@ export interface JobStats {
   total_count: number;
 }
 
+export interface Client {
+  // null id = client derived from job records, not yet saved to the client table
+  id: string | null;
+  saved: boolean;
+  client_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  notes: string | null;
+  job_count: number;
+  active_job_count: number;
+  last_job_date: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface AddressSuggestion {
   id: string;
   address: string;

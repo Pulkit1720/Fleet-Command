@@ -165,3 +165,15 @@ CREATE POLICY "Admins manage own jobs"
   TO authenticated
   USING (created_by = (SELECT auth.uid()))
   WITH CHECK (created_by = (SELECT auth.uid()));
+
+
+-- ============================================================
+-- 2026-07-15 – Clients page: scope client records per admin
+-- (Already applied to the live project via Supabase migration
+--  "add_client_created_by".)
+-- ============================================================
+
+ALTER TABLE public.client
+    ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_client_created_by ON public.client(created_by);

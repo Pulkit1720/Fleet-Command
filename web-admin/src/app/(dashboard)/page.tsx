@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ClipboardList, MapPin, Plus, Settings, Users } from 'lucide-react';
+import { ArrowRight, ClipboardList, Clock, MapPin, Plus, Settings, Users } from 'lucide-react';
 import Header from '@/layout/Header';
 import StatsCards from '@/components/ui/dashboard/StatsCards';
-import { getJobStats } from '@/lib/api';
-import { JobStats } from '@/types';
+import ActiveJobsBreakdown from '@/components/ui/dashboard/ActiveJobsBreakdown';
+import { getJobStats, getJobs } from '@/lib/api';
+import { Job, JobStats } from '@/types';
 
 const quickActions = [
     { href: '/create-job', label: 'Create job', icon: Plus, description: 'Add a new job to the queue' },
@@ -18,20 +19,53 @@ const quickActions = [
 
 export default function DashboardPage() {
     const [stats, setStats] = useState<JobStats | null>(null);
+    const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isJobsLoading, setIsJobsLoading] = useState(true);
 
     useEffect(() => {
         getJobStats()
             .then(setStats)
             .catch(console.error)
             .finally(() => setIsLoading(false));
+
+        getJobs()
+            .then((data) => setJobs(data.jobs))
+            .catch(console.error)
+            .finally(() => setIsJobsLoading(false));
     }, []);
+
+    const pendingCount = stats?.unassigned_count ?? 0;
 
     return (
         <>
             <Header title="Dashboard" subtitle="Your fleet at a glance" />
             <div className="mx-auto max-w-7xl space-y-8 p-7">
                 <StatsCards stats={stats} isLoading={isLoading} />
+
+                {pendingCount > 0 && (
+                    <Link
+                        href="/jobs"
+                        className="group flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                                <Clock className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="font-medium text-amber-900">
+                                    <span className="tabular">{pendingCount}</span> pending job{pendingCount !== 1 ? 's' : ''} awaiting assignment
+                                </p>
+                                <p className="text-sm text-amber-700/80">
+                                    Assign a technician from the job card to get them moving.
+                                </p>
+                            </div>
+                        </div>
+                        <ArrowRight className="h-4 w-4 flex-shrink-0 text-amber-500 transition-all duration-200 group-hover:translate-x-1 group-hover:text-amber-700" />
+                    </Link>
+                )}
+
+                <ActiveJobsBreakdown jobs={jobs} isLoading={isJobsLoading} />
 
                 <section>
                     <h2 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-500">

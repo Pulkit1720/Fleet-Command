@@ -9,6 +9,7 @@ interface JobListProps {
     selectedJobId?: string | null;
     onSelectJob?: (job: Job) => void;
     isLoading?: boolean;
+    onJobUpdated?: (job: Job) => void;
 }
 
 export default function JobList({
@@ -16,6 +17,7 @@ export default function JobList({
     selectedJobId,
     onSelectJob,
     isLoading,
+    onJobUpdated,
 }: JobListProps) {
     if (isLoading) {
         return (
@@ -52,6 +54,7 @@ export default function JobList({
                     job={job}
                     isSelected={selectedJobId === job.id}
                     onClick={() => onSelectJob?.(job)}
+                    onJobUpdated={onJobUpdated}
                 />
             ))}
         </div>

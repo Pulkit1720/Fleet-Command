@@ -1,8 +1,54 @@
 import { clsx, type ClassValue } from 'clsx';
-import { Job } from '@/types';
+import { Job, JobType } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
+}
+
+// Mirrors the backend's automatic-duration defaults.
+export const DEFAULT_DURATION_MINUTES: Record<JobType, number> = {
+  'Repair': 120,
+  'Install': 180,
+  'Ongoing Install': 240,
+  'Maintenance': 90,
+  'Inspection': 60,
+};
+
+// Duration is derived automatically: scheduled time window first, then the
+// job-type default.
+export function deriveDurationMinutes(
+  jobType: JobType,
+  timeStart?: string | null,
+  timeEnd?: string | null
+): number {
+  if (timeStart && timeEnd) {
+    const toMinutes = (t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const start = toMinutes(timeStart);
+    const end = toMinutes(timeEnd);
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+      return end - start;
+    }
+  }
+  return DEFAULT_DURATION_MINUTES[jobType] ?? 120;
+}
+
+export function formatDurationMinutes(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h && m) return `${h}h ${m}m`;
+  if (h) return `${h}h`;
+  return `${m}m`;
+}
+
+// Date-based job numbers are 9 digits: YYMMDDNNN → shown as "260715-001".
+// Older sequential numbers are shown as-is.
+export function formatJobNumber(jobNumber: number): string {
+  const s = String(jobNumber);
+  if (s.length === 9) return `${s.slice(0, 6)}-${s.slice(6)}`;
+  return s;
 }
 
 // A job is overdue when it is still open (not Completed/Cancelled) and the

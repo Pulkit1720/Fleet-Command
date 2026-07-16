@@ -7,6 +7,9 @@ import {
   getStatusColor,
   getJobTypeColor,
   isJobOverdue,
+  formatJobNumber,
+  deriveDurationMinutes,
+  formatDurationMinutes,
 } from '../utils';
 
 describe('cn', () => {
@@ -127,5 +130,36 @@ describe('isJobOverdue', () => {
 
   it('is not overdue without a scheduled date', () => {
     expect(isJobOverdue({ ...baseJob, scheduled_date: null }, now)).toBe(false);
+  });
+});
+
+describe('formatJobNumber', () => {
+  it('formats 9-digit date-based numbers as YYMMDD-NNN', () => {
+    expect(formatJobNumber(260715001)).toBe('260715-001');
+  });
+
+  it('leaves legacy sequential numbers untouched', () => {
+    expect(formatJobNumber(42)).toBe('42');
+    expect(formatJobNumber(1007)).toBe('1007');
+  });
+});
+
+describe('deriveDurationMinutes', () => {
+  it('uses the scheduled time window when valid', () => {
+    expect(deriveDurationMinutes('Repair', '10:00', '11:30')).toBe(90);
+  });
+
+  it('falls back to the job-type default otherwise', () => {
+    expect(deriveDurationMinutes('Inspection')).toBe(60);
+    expect(deriveDurationMinutes('Install', '10:00', '')).toBe(180);
+    expect(deriveDurationMinutes('Repair', '12:00', '10:00')).toBe(120);
+  });
+});
+
+describe('formatDurationMinutes', () => {
+  it('formats hours and minutes', () => {
+    expect(formatDurationMinutes(90)).toBe('1h 30m');
+    expect(formatDurationMinutes(120)).toBe('2h');
+    expect(formatDurationMinutes(45)).toBe('45m');
   });
 });

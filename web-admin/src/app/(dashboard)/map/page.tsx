@@ -29,6 +29,10 @@ export default function MapPage() {
                         selectedJobId={selectedJob?.id}
                         onSelectJob={setSelectedJob}
                         isLoading={isLoading}
+                        onJobUpdated={(updated) => {
+                            setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+                            setSelectedJob((prev) => (prev?.id === updated.id ? updated : prev));
+                        }}
                     />
                 </div>
                 <div className="flex-1 overflow-hidden rounded-2xl border border-ink-200 bg-surface shadow-sm">
