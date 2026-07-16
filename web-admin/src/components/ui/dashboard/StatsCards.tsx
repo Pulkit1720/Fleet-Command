@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ClipboardList, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { JobStats } from '@/types';
 
@@ -8,7 +9,25 @@ interface StatsCardsProps {
     isLoading?: boolean;
 }
 
+type CompletedTimeframe = 'today' | 'week' | 'month';
+
+const COMPLETED_TIMEFRAMES: { value: CompletedTimeframe; label: string }[] = [
+    { value: 'today', label: 'Completed today' },
+    { value: 'week', label: 'Completed this week' },
+    { value: 'month', label: 'Completed this month' },
+];
+
 export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
+    const [completedTimeframe, setCompletedTimeframe] = useState<CompletedTimeframe>('today');
+
+    const completedValue = stats
+        ? {
+              today: stats.completed_today_count ?? 0,
+              week: stats.completed_week_count ?? 0,
+              month: stats.completed_month_count ?? 0,
+          }[completedTimeframe]
+        : 0;
+
     const cards = [
         {
             name: 'Active jobs',
@@ -35,12 +54,13 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
             accent: 'bg-rose-500',
         },
         {
-            name: 'Completed today',
-            value: stats?.completed_count ?? 0,
+            name: 'Completed',
+            value: completedValue,
             icon: CheckCircle,
             tint: 'text-emerald-600',
             tintBg: 'bg-emerald-50',
             accent: 'bg-emerald-500',
+            isCompleted: true,
         },
     ];
 
@@ -53,9 +73,26 @@ export default function StatsCards({ stats, isLoading }: StatsCardsProps) {
                 >
                     {/* slim accent rail */}
                     <span className={`absolute inset-y-0 left-0 w-1 ${card.accent} opacity-80`} />
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-ink-500">{card.name}</p>
-                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${card.tintBg}`}>
+                    <div className="flex items-center justify-between gap-2">
+                        {card.isCompleted ? (
+                            <select
+                                value={completedTimeframe}
+                                onChange={(e) =>
+                                    setCompletedTimeframe(e.target.value as CompletedTimeframe)
+                                }
+                                aria-label="Completed jobs timeframe"
+                                className="-ml-1 min-w-0 cursor-pointer rounded-md border-none bg-transparent py-0.5 pl-1 pr-5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                            >
+                                {COMPLETED_TIMEFRAMES.map((tf) => (
+                                    <option key={tf.value} value={tf.value}>
+                                        {tf.label}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <p className="text-sm font-medium text-ink-500">{card.name}</p>
+                        )}
+                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${card.tintBg}`}>
                             <card.icon className={`h-[18px] w-[18px] ${card.tint}`} strokeWidth={2} />
                         </div>
                     </div>

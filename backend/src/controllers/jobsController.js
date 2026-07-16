@@ -287,11 +287,19 @@ export async function updateJobStatus(req, res, next) {
 // over only this admin's jobs.
 export async function getJobStats(req, res, next) {
     try {
-        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const now = new Date();
+        const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+
+        // Start of the current week (Monday) and month, as YYYY-MM-DD (UTC,
+        // matching how `today` is derived above).
+        const weekStartDate = new Date(now);
+        weekStartDate.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));
+        const weekStart = weekStartDate.toISOString().slice(0, 10);
+        const monthStart = `${today.slice(0, 8)}01`;
 
         const { data, error } = await supabase
             .from('jobs')
-            .select('status, priority, scheduled_date')
+            .select('status, priority, scheduled_date, actual_end_time, updated_at')
             .eq('created_by', req.user.id);
 
         if (error) throw error;
@@ -301,6 +309,9 @@ export async function getJobStats(req, res, next) {
             assigned_count: 0,
             in_progress_count: 0,
             completed_count: 0,
+            completed_today_count: 0,
+            completed_week_count: 0,
+            completed_month_count: 0,
             emergency_count: 0,
             today_count: 0,
             total_count: data.length,
@@ -310,7 +321,17 @@ export async function getJobStats(req, res, next) {
             if (job.status === 'Unassigned') stats.unassigned_count++;
             else if (job.status === 'Assigned') stats.assigned_count++;
             else if (job.status === 'In Progress') stats.in_progress_count++;
-            else if (job.status === 'Completed') stats.completed_count++;
+            else if (job.status === 'Completed') {
+                stats.completed_count++;
+                const completedAt = (job.actual_end_time || job.updated_at || '').slice(0, 10);
+                if (completedAt === today) stats.completed_today_count++;
+                if (completedAt && completedAt >= weekStart && completedAt <= today) {
+                    stats.completed_week_count++;
+                }
+                if (completedAt && completedAt >= monthStart && completedAt <= today) {
+                    stats.completed_month_count++;
+                }
+            }
 
             if (job.priority === 'Emergency' && !['Completed', 'Cancelled'].includes(job.status)) {
                 stats.emergency_count++;

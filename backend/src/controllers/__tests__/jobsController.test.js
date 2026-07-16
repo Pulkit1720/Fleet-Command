@@ -398,12 +398,25 @@ describe('jobsController', () => {
 
   describe('getJobStats', () => {
     it('aggregates stats over the requesting admin\'s jobs only', async () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
       const jobs = [
         { status: 'Unassigned', priority: 'Normal', scheduled_date: today },
         { status: 'Assigned', priority: 'Emergency', scheduled_date: null },
         { status: 'In Progress', priority: 'Normal', scheduled_date: today },
-        { status: 'Completed', priority: 'Emergency', scheduled_date: null },
+        {
+          status: 'Completed',
+          priority: 'Emergency',
+          scheduled_date: null,
+          actual_end_time: now.toISOString(),
+        },
+        {
+          status: 'Completed',
+          priority: 'Normal',
+          scheduled_date: null,
+          // Completed long ago: counts toward the all-time total only
+          actual_end_time: '2020-01-15T10:00:00.000Z',
+        },
       ];
       const chain = chainable({ data: jobs, error: null });
       mockFrom.mockReturnValue(chain);
@@ -418,10 +431,13 @@ describe('jobsController', () => {
         unassigned_count: 1,
         assigned_count: 1,
         in_progress_count: 1,
-        completed_count: 1,
+        completed_count: 2,
+        completed_today_count: 1,
+        completed_week_count: 1,
+        completed_month_count: 1,
         emergency_count: 1, // the Completed Emergency is excluded
         today_count: 2,
-        total_count: 4,
+        total_count: 5,
       });
     });
   });

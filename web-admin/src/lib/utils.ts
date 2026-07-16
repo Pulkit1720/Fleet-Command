@@ -1,7 +1,45 @@
 import { clsx, type ClassValue } from 'clsx';
+import { Job } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
+}
+
+// A job is overdue when it is still open (not Completed/Cancelled) and the
+// current time is past its expected completion time. Expected completion is,
+// in order of preference: scheduled end time, scheduled start time plus the
+// estimated duration, or the end of the scheduled day.
+export function isJobOverdue(
+  job: Pick<
+    Job,
+    | 'status'
+    | 'scheduled_date'
+    | 'scheduled_time_start'
+    | 'scheduled_time_end'
+    | 'estimated_duration_minutes'
+  >,
+  now: Date = new Date()
+): boolean {
+  if (job.status === 'Completed' || job.status === 'Cancelled') return false;
+  if (!job.scheduled_date) return false;
+
+  const date = job.scheduled_date.slice(0, 10);
+  const toLocalDate = (time: string) =>
+    new Date(`${date}T${time.length === 5 ? `${time}:00` : time}`);
+
+  let expectedEnd: Date;
+  if (job.scheduled_time_end) {
+    expectedEnd = toLocalDate(job.scheduled_time_end);
+  } else if (job.scheduled_time_start) {
+    expectedEnd = new Date(
+      toLocalDate(job.scheduled_time_start).getTime() +
+        (job.estimated_duration_minutes || 0) * 60_000
+    );
+  } else {
+    expectedEnd = new Date(`${date}T23:59:59`);
+  }
+
+  return !Number.isNaN(expectedEnd.getTime()) && now.getTime() > expectedEnd.getTime();
 }
 
 export function formatDate(date: string | null): string {

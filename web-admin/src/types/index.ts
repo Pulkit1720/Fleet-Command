@@ -50,6 +50,9 @@ export interface JobStats {
   assigned_count: number;
   in_progress_count: number;
   completed_count: number;
+  completed_today_count?: number;
+  completed_week_count?: number;
+  completed_month_count?: number;
   emergency_count: number;
   today_count: number;
   total_count: number;

@@ -6,6 +6,7 @@ import {
   getPriorityColor,
   getStatusColor,
   getJobTypeColor,
+  isJobOverdue,
 } from '../utils';
 
 describe('cn', () => {
@@ -83,5 +84,48 @@ describe('getJobTypeColor', () => {
 
   it('returns default for unknown job type', () => {
     expect(getJobTypeColor('Survey')).toContain('ink');
+  });
+});
+
+describe('isJobOverdue', () => {
+  const baseJob = {
+    status: 'Assigned' as const,
+    scheduled_date: '2024-06-15',
+    scheduled_time_start: null,
+    scheduled_time_end: null,
+    estimated_duration_minutes: 60,
+  };
+  const now = new Date('2024-06-15T12:00:00');
+
+  it('is overdue when past the scheduled end time', () => {
+    const job = { ...baseJob, scheduled_time_end: '11:00' };
+    expect(isJobOverdue(job, now)).toBe(true);
+  });
+
+  it('is not overdue before the scheduled end time', () => {
+    const job = { ...baseJob, scheduled_time_end: '13:00' };
+    expect(isJobOverdue(job, now)).toBe(false);
+  });
+
+  it('falls back to start time plus estimated duration', () => {
+    const overdue = { ...baseJob, scheduled_time_start: '10:00' }; // ends 11:00
+    const onTime = { ...baseJob, scheduled_time_start: '11:30' }; // ends 12:30
+    expect(isJobOverdue(overdue, now)).toBe(true);
+    expect(isJobOverdue(onTime, now)).toBe(false);
+  });
+
+  it('falls back to end of the scheduled day when no times are set', () => {
+    expect(isJobOverdue(baseJob, now)).toBe(false);
+    expect(isJobOverdue(baseJob, new Date('2024-06-16T00:30:00'))).toBe(true);
+  });
+
+  it('is never overdue for completed or cancelled jobs', () => {
+    const job = { ...baseJob, scheduled_time_end: '11:00' };
+    expect(isJobOverdue({ ...job, status: 'Completed' }, now)).toBe(false);
+    expect(isJobOverdue({ ...job, status: 'Cancelled' }, now)).toBe(false);
+  });
+
+  it('is not overdue without a scheduled date', () => {
+    expect(isJobOverdue({ ...baseJob, scheduled_date: null }, now)).toBe(false);
   });
 });

@@ -1,7 +1,12 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ClipboardList, MapPin, Plus, Settings, Users } from 'lucide-react';
 import Header from '@/layout/Header';
 import StatsCards from '@/components/ui/dashboard/StatsCards';
+import { getJobStats } from '@/lib/api';
+import { JobStats } from '@/types';
 
 const quickActions = [
     { href: '/create-job', label: 'Create job', icon: Plus, description: 'Add a new job to the queue' },
@@ -12,11 +17,21 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+    const [stats, setStats] = useState<JobStats | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        getJobStats()
+            .then(setStats)
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
+    }, []);
+
     return (
         <>
             <Header title="Dashboard" subtitle="Your fleet at a glance" />
             <div className="mx-auto max-w-7xl space-y-8 p-7">
-                <StatsCards stats={null} />
+                <StatsCards stats={stats} isLoading={isLoading} />
 
                 <section>
                     <h2 className="mb-3 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-500">

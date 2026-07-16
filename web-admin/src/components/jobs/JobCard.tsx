@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock, User } from 'lucide-react';
+import { MapPin, Clock, User, AlertCircle } from 'lucide-react';
 import { Job } from '@/types';
 import Badge from '@/components/ui/Badge';
 import {
@@ -9,6 +9,7 @@ import {
     getJobTypeColor,
     formatDate,
     formatTime,
+    isJobOverdue,
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,8 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onClick, isSelected }: JobCardProps) {
+    const overdue = isJobOverdue(job);
+
     return (
         <div
             onClick={onClick}
@@ -46,6 +49,12 @@ export default function JobCard({ job, onClick, isSelected }: JobCardProps) {
                 <Badge className={getStatusColor(job.status)} variant="outline">
                     {job.status}
                 </Badge>
+                {overdue && (
+                    <Badge className="gap-1 bg-rose-600 text-white">
+                        <AlertCircle className="h-3 w-3" />
+                        Overdue
+                    </Badge>
+                )}
             </div>
 
             {/* Address */}

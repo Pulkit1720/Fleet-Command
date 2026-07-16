@@ -52,9 +52,9 @@ export default function TechniciansPage() {
                 </div>
 
                 {isLoading && (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-44 animate-pulse rounded-2xl border border-ink-200 bg-ink-100/70" />
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="h-32 animate-pulse rounded-xl border border-ink-200 bg-ink-100/70" />
                         ))}
                     </div>
                 )}
@@ -76,7 +76,7 @@ export default function TechniciansPage() {
                 )}
 
                 {!isLoading && !error && technicians.length > 0 && (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {technicians.map((tech) => (
                             <TechnicianCard key={tech.id} tech={tech} />
                         ))}
@@ -240,48 +240,48 @@ function TechnicianCard({ tech }: { tech: Technician }) {
         : null;
 
     return (
-        <div className="rounded-2xl border border-ink-200 bg-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-            <div className="mb-4 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50">
-                        <User className="h-5 w-5 text-brand-600" />
+        <div className="rounded-xl border border-ink-200 bg-surface p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <div className="mb-2.5 flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
+                        <User className="h-4 w-4 text-brand-600" />
                     </div>
-                    <div>
-                        <p className="font-medium text-ink-900">{tech.full_name}</p>
-                        <p className="tabular text-xs text-ink-400">ID: {tech.id.slice(0, 8)}…</p>
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-ink-900">{tech.full_name}</p>
+                        <p className="tabular text-[11px] text-ink-400">ID: {tech.id.slice(0, 8)}…</p>
                     </div>
                 </div>
                 <span
-                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
+                    className={`inline-flex flex-shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${
                         tech.is_active
                             ? 'bg-emerald-50 text-emerald-700'
                             : 'bg-ink-100 text-ink-500'
                     }`}
                 >
                     <Circle
-                        className={`h-2 w-2 fill-current ${tech.is_active ? 'text-emerald-500' : 'text-ink-400'}`}
+                        className={`h-1.5 w-1.5 fill-current ${tech.is_active ? 'text-emerald-500' : 'text-ink-400'}`}
                     />
                     {tech.is_active ? 'Active' : 'Inactive'}
                 </span>
             </div>
 
-            <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-ink-600">
-                    <Mail className="h-4 w-4 flex-shrink-0 text-ink-400" />
+            <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs text-ink-600">
+                    <Mail className="h-3.5 w-3.5 flex-shrink-0 text-ink-400" />
                     <span className="truncate">{tech.email}</span>
                 </div>
                 {tech.phone && (
-                    <div className="flex items-center gap-2 text-sm text-ink-600">
-                        <Phone className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                    <div className="flex items-center gap-1.5 text-xs text-ink-600">
+                        <Phone className="h-3.5 w-3.5 flex-shrink-0 text-ink-400" />
                         <span className="tabular">{tech.phone}</span>
                     </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-ink-500">
-                    <MapPin className="h-4 w-4 flex-shrink-0 text-ink-400" />
+                <div className="flex items-center gap-1.5 text-xs text-ink-500">
+                    <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-ink-400" />
                     {hasLocation ? (
-                        <span className="tabular">
+                        <span className="tabular truncate">
                             {tech.current_lat!.toFixed(4)}, {tech.current_lng!.toFixed(4)}
-                            {lastSeen && <span className="ml-1 text-xs text-ink-400">· {lastSeen}</span>}
+                            {lastSeen && <span className="ml-1 text-[11px] text-ink-400">· {lastSeen}</span>}
                         </span>
                     ) : (
                         <span className="text-ink-400">Location not available</span>
