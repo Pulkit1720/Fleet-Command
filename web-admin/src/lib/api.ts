@@ -1,5 +1,5 @@
 import { Job, JobStats, Technician, AddressSuggestion, Client } from '@/types';
-import { createClient } from '@/lib/supabase/client';
+import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -10,7 +10,7 @@ async function fetchApi<T>(
   // Attach the current admin's access token so the backend can scope by user
   const {
     data: { session },
-  } = await createClient().auth.getSession();
+  } = await createSupabaseClient().auth.getSession();
 
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
