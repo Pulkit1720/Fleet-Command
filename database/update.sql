@@ -177,3 +177,11 @@ ALTER TABLE public.client
     ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 
 CREATE INDEX IF NOT EXISTS idx_client_created_by ON public.client(created_by);
+
+
+-- ============================================================
+-- 2026-07-19 – Invite fix: phone is optional on technicians
+-- (Applied live via Supabase migration "technicians_phone_nullable".)
+-- ============================================================
+
+ALTER TABLE public.technicians ALTER COLUMN phone DROP NOT NULL;
