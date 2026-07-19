@@ -168,6 +168,29 @@ describe('techniciansController', () => {
       });
     });
 
+    it('returns 403 for the public demo account', async () => {
+      const res = mockRes();
+      const next = vi.fn();
+
+      await inviteTechnician(
+        {
+          body: { full_name: 'Tech', email: 'tech@test.com' },
+          user: {
+            id: 'demo-1',
+            email: 'demo@fleetcd.com',
+            user_metadata: { role: 'admin' },
+          },
+        },
+        res,
+        next
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Invites are disabled in the demo workspace',
+      });
+    });
+
     it('returns 400 when required fields missing', async () => {
       const res = mockRes();
       const next = vi.fn();

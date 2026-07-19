@@ -4,8 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2, Eye, EyeOff, Truck, MapPin } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Truck, MapPin, Compass } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+// Public demo workspace — intentionally shared credentials, seeded with
+// sample data. Email invites are disabled server-side for this account.
+const DEMO_EMAIL = 'demo@fleetcd.com';
+const DEMO_PASSWORD = 'FleetDemo!2026';
 
 const week = [
     { day: 'Sun', date: 22 },
@@ -24,26 +29,37 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const signIn = async (signInEmail: string, signInPassword: string) => {
         setError('');
-        setIsLoading(true);
-
         const supabase = createClient();
         const { error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
+            email: signInEmail,
+            password: signInPassword,
         });
 
         if (authError) {
             setError(authError.message);
-            setIsLoading(false);
-            return;
+            return false;
         }
 
         router.push('/');
         router.refresh();
+        return true;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        const ok = await signIn(email, password);
+        if (!ok) setIsLoading(false);
+    };
+
+    const handleDemo = async () => {
+        setIsDemoLoading(true);
+        const ok = await signIn(DEMO_EMAIL, DEMO_PASSWORD);
+        if (!ok) setIsDemoLoading(false);
     };
 
     return (
@@ -126,7 +142,7 @@ export default function LoginPage() {
 
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || isDemoLoading}
                                 className="!mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 py-4 text-sm font-semibold text-white shadow-brand transition-all hover:bg-brand-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {isLoading ? (
@@ -139,6 +155,36 @@ export default function LoginPage() {
                                 )}
                             </button>
                         </form>
+
+                        {/* Demo access */}
+                        <div className="mt-6">
+                            <div className="flex items-center gap-3 text-xs text-ink-400">
+                                <span className="h-px flex-1 bg-ink-200" />
+                                or
+                                <span className="h-px flex-1 bg-ink-200" />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleDemo}
+                                disabled={isLoading || isDemoLoading}
+                                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-brand-300 bg-white/70 py-3.5 text-sm font-semibold text-brand-700 shadow-xs backdrop-blur transition-all hover:border-brand-400 hover:bg-brand-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isDemoLoading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Opening demo…
+                                    </>
+                                ) : (
+                                    <>
+                                        <Compass className="h-4 w-4" />
+                                        Explore the demo
+                                    </>
+                                )}
+                            </button>
+                            <p className="mt-2 text-center text-xs text-ink-400">
+                                One click, no sign-up — a sample workspace with live jobs and technicians.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Bottom row */}

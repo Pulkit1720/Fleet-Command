@@ -2,6 +2,9 @@ import supabase from '../config/supabase.js';
 import { calculateDistance } from '../services/truthEngineService.js';
 import { sendTechnicianInvite } from '../services/emailService.js';
 
+// Public demo account (credentials are intentionally public on the login page)
+const DEMO_ADMIN_EMAIL = 'demo@fleetcd.com';
+
 // Get all technicians
 export async function getTechnicians(req, res, next) {
   try {
@@ -79,6 +82,13 @@ export async function inviteTechnician(req, res, next) {
     const role = req.user?.user_metadata?.role ?? req.user?.app_metadata?.role;
     if (role !== 'admin') {
       return res.status(403).json({ error: 'Only an admin can invite technicians' });
+    }
+
+    // The public demo workspace must not send real invite emails
+    if (req.user?.email === DEMO_ADMIN_EMAIL) {
+      return res.status(403).json({
+        error: 'Invites are disabled in the demo workspace',
+      });
     }
 
     const { full_name, email, phone } = req.body;
