@@ -158,6 +158,134 @@ export async function inviteTechnician(req, res, next) {
   }
 }
 
+// Update a technician's profile (name, phone, active status)
+export async function updateTechnician(req, res, next) {
+  try {
+    const role = req.user?.user_metadata?.role ?? req.user?.app_metadata?.role;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Only an admin can update technicians' });
+    }
+
+    const { id } = req.params;
+    const { full_name, phone, is_active } = req.body;
+
+    const updates = {};
+    if (full_name !== undefined) {
+      if (!String(full_name).trim()) {
+        return res.status(400).json({ error: 'full_name cannot be empty' });
+      }
+      updates.full_name = String(full_name).trim();
+    }
+    if (phone !== undefined) {
+      // DB check constraint requires exactly 10 digits when phone is set
+      const digits = phone == null ? '' : String(phone).replace(/\D/g, '');
+      if (digits && !/^\d{10}$/.test(digits)) {
+        return res.status(400).json({ error: 'Phone must be exactly 10 digits' });
+      }
+      updates.phone = digits || null;
+    }
+    if (is_active !== undefined) {
+      updates.is_active = Boolean(is_active);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No editable fields provided' });
+    }
+
+    // Scoped to this admin's own technicians
+    const { data, error } = await supabase
+      .from('technicians')
+      .update(updates)
+      .eq('id', id)
+      .eq('admin_id', req.user.id)
+      .select()
+      .single();
+
+    if (error?.code === 'PGRST116') {
+      return res.status(404).json({ error: 'Technician not found' });
+    }
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Delete a technician: open jobs go back to Unassigned, their login is removed
+export async function deleteTechnician(req, res, next) {
+  try {
+    const role = req.user?.user_metadata?.role ?? req.user?.app_metadata?.role;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Only an admin can delete technicians' });
+    }
+
+    // The public demo workspace is shared — keep its seeded team intact
+    if (req.user?.email === DEMO_ADMIN_EMAIL) {
+      return res.status(403).json({
+        error: 'Deleting technicians is disabled in the demo workspace',
+      });
+    }
+
+    const { id } = req.params;
+
+    // Ownership check, and we need user_id to remove the auth account
+    const { data: technician, error: fetchError } = await supabase
+      .from('technicians')
+      .select('id, user_id')
+      .eq('id', id)
+      .eq('admin_id', req.user.id)
+      .single();
+
+    if (fetchError || !technician) {
+      return res.status(404).json({ error: 'Technician not found' });
+    }
+
+    // Return their open jobs to the unassigned pool (the FK would only null
+    // the technician, leaving jobs stuck in Assigned/In Progress)
+    const { error: jobsError } = await supabase
+      .from('jobs')
+      .update({ assigned_technician: null, status: 'Unassigned' })
+      .eq('assigned_technician', id)
+      .in('status', ['Assigned', 'In Progress']);
+
+    if (jobsError) throw jobsError;
+
+    const { error: deleteError } = await supabase
+      .from('technicians')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      // job_attachments.uploaded_by has no ON DELETE action, so the FK blocks
+      if (deleteError.code === '23503') {
+        return res.status(409).json({
+          error:
+            'This technician has uploaded job attachments and cannot be deleted. Mark them inactive instead.',
+        });
+      }
+      throw deleteError;
+    }
+
+    // Remove the login so the deleted technician can no longer sign in
+    if (technician.user_id) {
+      const { error: authError } = await supabase.auth.admin.deleteUser(
+        technician.user_id
+      );
+      if (authError) {
+        console.error(
+          `Technician ${id} deleted but auth user cleanup failed:`,
+          authError.message
+        );
+      }
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // Get jobs for a technician sorted by distance
 export async function getTechnicianJobs(req, res, next) {
   try {

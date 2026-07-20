@@ -121,6 +121,22 @@ export async function inviteTechnician(data: {
   });
 }
 
+export async function updateTechnician(
+  id: string,
+  data: Partial<Pick<Technician, 'full_name' | 'phone' | 'is_active'>>
+): Promise<Technician> {
+  return fetchApi(`/technicians/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTechnician(id: string): Promise<{ ok: boolean }> {
+  return fetchApi(`/technicians/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 // Clients API
 export async function getClients(): Promise<Client[]> {
   return fetchApi('/clients');

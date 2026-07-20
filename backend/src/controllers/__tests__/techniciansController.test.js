@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockFrom, mockGenerateLink, mockSendInvite } = vi.hoisted(() => ({
+const { mockFrom, mockGenerateLink, mockSendInvite, mockDeleteUser } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
   mockGenerateLink: vi.fn(),
   mockSendInvite: vi.fn(),
+  mockDeleteUser: vi.fn(),
 }));
 
 vi.mock('../../config/supabase.js', () => ({
@@ -12,6 +13,7 @@ vi.mock('../../config/supabase.js', () => ({
     auth: {
       admin: {
         generateLink: (...args) => mockGenerateLink(...args),
+        deleteUser: (...args) => mockDeleteUser(...args),
       },
     },
   },
@@ -31,6 +33,8 @@ import {
   getTechnician,
   updateLocation,
   inviteTechnician,
+  updateTechnician,
+  deleteTechnician,
   getTechnicianJobs,
 } from '../techniciansController.js';
 
@@ -39,6 +43,7 @@ function chainable(finalResult) {
     select: vi.fn(),
     insert: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
     eq: vi.fn(),
     order: vi.fn(),
     in: vi.fn(),
@@ -50,6 +55,7 @@ function chainable(finalResult) {
   chain.select.mockReturnValue(chain);
   chain.insert.mockReturnValue(chain);
   chain.update.mockReturnValue(chain);
+  chain.delete.mockReturnValue(chain);
   chain.eq.mockReturnValue(chain);
   chain.order.mockReturnValue(chain);
   chain.in.mockReturnValue(chain);
@@ -286,6 +292,218 @@ describe('techniciansController', () => {
         })
       );
       expect(res.status).toHaveBeenCalledWith(201);
+    });
+  });
+
+  describe('updateTechnician', () => {
+    const adminUser = {
+      id: 'admin-1',
+      email: 'admin@example.com',
+      user_metadata: { role: 'admin' },
+    };
+
+    it('returns 403 when caller is not an admin', async () => {
+      const res = mockRes();
+
+      await updateTechnician(
+        {
+          params: { id: 'tech-1' },
+          body: { full_name: 'New Name' },
+          user: { id: 'tech-1', user_metadata: { role: 'technician' } },
+        },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Only an admin can update technicians',
+      });
+    });
+
+    it('returns 400 for an invalid phone number', async () => {
+      const res = mockRes();
+
+      await updateTechnician(
+        { params: { id: 'tech-1' }, body: { phone: '12345' }, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Phone must be exactly 10 digits',
+      });
+    });
+
+    it('returns 400 when no editable fields provided', async () => {
+      const res = mockRes();
+
+      await updateTechnician(
+        { params: { id: 'tech-1' }, body: {}, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'No editable fields provided',
+      });
+    });
+
+    it('returns 404 when technician is not owned by the admin', async () => {
+      mockFrom.mockReturnValue(chainable({ data: null, error: { code: 'PGRST116' } }));
+      const res = mockRes();
+
+      await updateTechnician(
+        { params: { id: 'tech-x' }, body: { full_name: 'New Name' }, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Technician not found' });
+    });
+
+    it('normalizes phone and updates the technician', async () => {
+      const updated = {
+        id: 'tech-1',
+        full_name: 'New Name',
+        phone: '3128471928',
+        is_active: false,
+      };
+      const chain = chainable({ data: updated, error: null });
+      mockFrom.mockReturnValue(chain);
+      const res = mockRes();
+
+      await updateTechnician(
+        {
+          params: { id: 'tech-1' },
+          body: { full_name: '  New Name  ', phone: '(312) 847-1928', is_active: false },
+          user: adminUser,
+        },
+        res,
+        vi.fn()
+      );
+
+      expect(chain.update).toHaveBeenCalledWith({
+        full_name: 'New Name',
+        phone: '3128471928',
+        is_active: false,
+      });
+      expect(chain.eq).toHaveBeenCalledWith('admin_id', 'admin-1');
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
+  });
+
+  describe('deleteTechnician', () => {
+    const adminUser = {
+      id: 'admin-1',
+      email: 'admin@example.com',
+      user_metadata: { role: 'admin' },
+    };
+
+    it('returns 403 when caller is not an admin', async () => {
+      const res = mockRes();
+
+      await deleteTechnician(
+        {
+          params: { id: 'tech-1' },
+          user: { id: 'tech-1', user_metadata: { role: 'technician' } },
+        },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Only an admin can delete technicians',
+      });
+    });
+
+    it('returns 403 for the public demo account', async () => {
+      const res = mockRes();
+
+      await deleteTechnician(
+        {
+          params: { id: 'tech-1' },
+          user: { id: 'demo-1', email: 'demo@fleetcd.com', user_metadata: { role: 'admin' } },
+        },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Deleting technicians is disabled in the demo workspace',
+      });
+    });
+
+    it('returns 404 when technician is not owned by the admin', async () => {
+      mockFrom.mockReturnValue(chainable({ data: null, error: { code: 'PGRST116' } }));
+      const res = mockRes();
+
+      await deleteTechnician(
+        { params: { id: 'tech-x' }, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Technician not found' });
+    });
+
+    it('unassigns open jobs, deletes the technician, and removes the auth user', async () => {
+      const fetchChain = chainable({
+        data: { id: 'tech-1', user_id: 'auth-user-1' },
+        error: null,
+      });
+      const jobsChain = chainable({ error: null });
+      const deleteChain = chainable({ error: null });
+      mockFrom
+        .mockReturnValueOnce(fetchChain)
+        .mockReturnValueOnce(jobsChain)
+        .mockReturnValueOnce(deleteChain);
+      mockDeleteUser.mockResolvedValue({ error: null });
+      const res = mockRes();
+
+      await deleteTechnician(
+        { params: { id: 'tech-1' }, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(jobsChain.update).toHaveBeenCalledWith({
+        assigned_technician: null,
+        status: 'Unassigned',
+      });
+      expect(jobsChain.in).toHaveBeenCalledWith('status', ['Assigned', 'In Progress']);
+      expect(deleteChain.delete).toHaveBeenCalled();
+      expect(mockDeleteUser).toHaveBeenCalledWith('auth-user-1');
+      expect(res.json).toHaveBeenCalledWith({ ok: true });
+    });
+
+    it('returns 409 when the delete is blocked by job attachments', async () => {
+      const fetchChain = chainable({
+        data: { id: 'tech-1', user_id: 'auth-user-1' },
+        error: null,
+      });
+      const jobsChain = chainable({ error: null });
+      const deleteChain = chainable({ error: { code: '23503' } });
+      mockFrom
+        .mockReturnValueOnce(fetchChain)
+        .mockReturnValueOnce(jobsChain)
+        .mockReturnValueOnce(deleteChain);
+      const res = mockRes();
+
+      await deleteTechnician(
+        { params: { id: 'tech-1' }, user: adminUser },
+        res,
+        vi.fn()
+      );
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(mockDeleteUser).not.toHaveBeenCalled();
     });
   });
 

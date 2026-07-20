@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Circle, UserPlus, X, Loader2 } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Circle, UserPlus, X, Loader2, Trash2 } from 'lucide-react';
 import Header from '@/layout/Header';
-import { getTechnicians, inviteTechnician } from '@/lib/api';
+import { getTechnicians, inviteTechnician, updateTechnician, deleteTechnician } from '@/lib/api';
 import { Technician } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,6 +15,7 @@ export default function TechniciansPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showInviteModal, setShowInviteModal] = useState(false);
+    const [selectedTech, setSelectedTech] = useState<Technician | null>(null);
 
     useEffect(() => {
         getTechnicians()
@@ -26,6 +27,16 @@ export default function TechniciansPage() {
     const handleInvited = (newTech: Technician) => {
         setTechnicians((prev) => [...prev, newTech]);
         setShowInviteModal(false);
+    };
+
+    const handleUpdated = (updated: Technician) => {
+        setTechnicians((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+        setSelectedTech(null);
+    };
+
+    const handleDeleted = (id: string) => {
+        setTechnicians((prev) => prev.filter((t) => t.id !== id));
+        setSelectedTech(null);
     };
 
     return (
@@ -78,7 +89,11 @@ export default function TechniciansPage() {
                 {!isLoading && !error && technicians.length > 0 && (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {technicians.map((tech) => (
-                            <TechnicianCard key={tech.id} tech={tech} />
+                            <TechnicianCard
+                                key={tech.id}
+                                tech={tech}
+                                onClick={() => setSelectedTech(tech)}
+                            />
                         ))}
                     </div>
                 )}
@@ -88,6 +103,16 @@ export default function TechniciansPage() {
                 <InviteModal
                     onClose={() => setShowInviteModal(false)}
                     onInvited={handleInvited}
+                />
+            )}
+
+            {selectedTech && (
+                <TechnicianDialog
+                    tech={selectedTech}
+                    isAdmin={isAdmin}
+                    onClose={() => setSelectedTech(null)}
+                    onUpdated={handleUpdated}
+                    onDeleted={handleDeleted}
                 />
             )}
         </>
@@ -228,7 +253,7 @@ function InviteModal({
     );
 }
 
-function TechnicianCard({ tech }: { tech: Technician }) {
+function TechnicianCard({ tech, onClick }: { tech: Technician; onClick: () => void }) {
     const hasLocation = tech.current_lat != null && tech.current_lng != null;
     const lastSeen = tech.last_location_update
         ? new Date(tech.last_location_update).toLocaleString('en-US', {
@@ -240,7 +265,10 @@ function TechnicianCard({ tech }: { tech: Technician }) {
         : null;
 
     return (
-        <div className="rounded-xl border border-ink-200 bg-surface p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+        <button
+            type="button"
+            onClick={onClick}
+            className="cursor-pointer rounded-xl border border-ink-200 bg-surface p-3.5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15">
             <div className="mb-2.5 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
@@ -287,6 +315,248 @@ function TechnicianCard({ tech }: { tech: Technician }) {
                         <span className="text-ink-400">Location not available</span>
                     )}
                 </div>
+            </div>
+        </button>
+    );
+}
+
+function TechnicianDialog({
+    tech,
+    isAdmin,
+    onClose,
+    onUpdated,
+    onDeleted,
+}: {
+    tech: Technician;
+    isAdmin: boolean;
+    onClose: () => void;
+    onUpdated: (tech: Technician) => void;
+    onDeleted: (id: string) => void;
+}) {
+    const [fullName, setFullName] = useState(tech.full_name);
+    const [phone, setPhone] = useState(tech.phone ?? '');
+    const [isActive, setIsActive] = useState(tech.is_active);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [error, setError] = useState('');
+
+    const phoneDigits = phone.replace(/\D/g, '');
+    const phoneInvalid = phoneDigits.length > 0 && phoneDigits.length !== 10;
+    const isDirty =
+        fullName.trim() !== tech.full_name ||
+        (phoneDigits || null) !== (tech.phone ?? null) ||
+        isActive !== tech.is_active;
+    const isBusy = isSaving || isDeleting;
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!fullName.trim()) {
+            setError('Name cannot be empty.');
+            return;
+        }
+        if (phoneInvalid) {
+            setError('Phone must be exactly 10 digits.');
+            return;
+        }
+        setError('');
+        setIsSaving(true);
+        try {
+            const updated = await updateTechnician(tech.id, {
+                full_name: fullName.trim(),
+                phone: phoneDigits || null,
+                is_active: isActive,
+            });
+            onUpdated(updated);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to update technician');
+            setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setError('');
+        setIsDeleting(true);
+        try {
+            await deleteTechnician(tech.id);
+            onDeleted(tech.id);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to delete technician');
+            setIsDeleting(false);
+            setConfirmingDelete(false);
+        }
+    };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 px-4 backdrop-blur-sm"
+            onClick={isBusy ? undefined : onClose}
+        >
+            <div
+                className="w-full max-w-md animate-scale-in rounded-3xl border border-ink-200 bg-surface shadow-lg"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between border-b border-ink-100 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50">
+                            <User className="h-4 w-4 text-brand-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-medium text-ink-900">{tech.full_name}</h2>
+                            <p className="tabular text-[11px] text-ink-400">ID: {tech.id.slice(0, 8)}…</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        disabled={isBusy}
+                        aria-label="Close"
+                        className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-600 disabled:opacity-50"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSave} className="space-y-4 p-6">
+                    {error && (
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                            {error}
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">
+                            Full name
+                        </label>
+                        <input
+                            type="text"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            disabled={!isAdmin || isBusy}
+                            className="h-11 w-full rounded-xl border border-ink-200 px-3.5 text-sm text-ink-900 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Email</label>
+                        <input
+                            type="email"
+                            value={tech.email}
+                            disabled
+                            className="h-11 w-full rounded-xl border border-ink-200 bg-ink-50 px-3.5 text-sm text-ink-500"
+                        />
+                        <p className="mt-1 text-xs text-ink-400">
+                            Email is tied to the technician&apos;s login and can&apos;t be changed.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="mb-1.5 block text-sm font-medium text-ink-700">Phone</label>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            disabled={!isAdmin || isBusy}
+                            placeholder="10-digit number"
+                            className={`h-11 w-full rounded-xl border px-3.5 text-sm text-ink-900 transition-colors focus:outline-none focus:ring-4 disabled:bg-ink-50 ${
+                                phoneInvalid
+                                    ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10'
+                                    : 'border-ink-200 focus:border-brand-400 focus:ring-brand-500/10'
+                            }`}
+                        />
+                        {phoneInvalid && (
+                            <p className="mt-1 text-xs text-rose-500">Phone must be exactly 10 digits.</p>
+                        )}
+                    </div>
+
+                    <label className="flex cursor-pointer items-center justify-between rounded-xl border border-ink-200 px-4 py-3">
+                        <div>
+                            <p className="text-sm font-medium text-ink-700">Active</p>
+                            <p className="text-xs text-ink-400">
+                                Inactive technicians can&apos;t be assigned new jobs.
+                            </p>
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => setIsActive(e.target.checked)}
+                            disabled={!isAdmin || isBusy}
+                            className="h-5 w-5 rounded border-ink-300 text-brand-600 accent-brand-600"
+                        />
+                    </label>
+
+                    {isAdmin && !confirmingDelete && (
+                        <div className="flex items-center gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmingDelete(true)}
+                                disabled={isBusy}
+                                className="flex items-center gap-1.5 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                            </button>
+                            <div className="ml-auto flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    disabled={isBusy}
+                                    className="rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isBusy || !isDirty || phoneInvalid}
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-brand-700 active:scale-[0.98] disabled:opacity-60"
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Saving…
+                                        </>
+                                    ) : (
+                                        'Save changes'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {isAdmin && confirmingDelete && (
+                        <div className="space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                            <p className="text-sm text-rose-700">
+                                Delete <span className="font-semibold">{tech.full_name}</span>? Their
+                                open jobs will move back to Unassigned and their login will be
+                                removed. This can&apos;t be undone.
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmingDelete(false)}
+                                    disabled={isDeleting}
+                                    className="rounded-xl border border-ink-200 bg-surface px-4 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-50"
+                                >
+                                    Keep technician
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDelete}
+                                    disabled={isDeleting}
+                                    className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-rose-700 active:scale-[0.98] disabled:opacity-60"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Deleting…
+                                        </>
+                                    ) : (
+                                        'Yes, delete'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </form>
             </div>
         </div>
     );
