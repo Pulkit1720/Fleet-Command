@@ -148,9 +148,25 @@ export async function inviteTechnician(req, res, next) {
 
     if (techError) throw techError;
 
-    // Deliver the invite. If email fails, surface it so the admin knows to retry
-    // rather than silently leaving the technician without a setup link.
-    await sendTechnicianInvite({ to: email, full_name, inviterName, inviteUrl });
+    // Deliver the invite. If email fails, roll back the half-created technician
+    // and auth user so the admin can simply retry once email works again —
+    // otherwise the leftover records make the retry fail with "already exists".
+    try {
+      await sendTechnicianInvite({ to: email, full_name, inviterName, inviteUrl });
+    } catch (emailError) {
+      await supabase.from('technicians').delete().eq('id', technician.id);
+      if (linkData.user?.id) {
+        await supabase.auth.admin.deleteUser(linkData.user.id);
+      }
+      console.error(
+        `Invite email to ${email} failed, rolled back technician ${technician.id}:`,
+        emailError.message
+      );
+      return res.status(502).json({
+        error:
+          'The invite email could not be sent, so nothing was created. Fix the email settings and retry.',
+      });
+    }
 
     res.status(201).json(technician);
   } catch (error) {

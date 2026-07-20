@@ -293,6 +293,46 @@ describe('techniciansController', () => {
       );
       expect(res.status).toHaveBeenCalledWith(201);
     });
+
+    it('rolls back the technician and auth user when the invite email fails', async () => {
+      let callCount = 0;
+      const deleteChain = chainable({ error: null });
+      mockFrom.mockImplementation(() => {
+        callCount += 1;
+        if (callCount === 1) {
+          return chainable({ data: null, error: { code: 'PGRST116' } });
+        }
+        if (callCount === 2) {
+          return chainable({ data: { id: 'tech-new' }, error: null });
+        }
+        return deleteChain;
+      });
+      mockGenerateLink.mockResolvedValue({
+        data: {
+          user: { id: 'auth-user-1' },
+          properties: { action_link: 'https://supabase.test/invite' },
+        },
+        error: null,
+      });
+      mockSendInvite.mockRejectedValue(new Error('Invalid login: 535 5.7.8'));
+      mockDeleteUser.mockResolvedValue({ error: null });
+
+      const res = mockRes();
+
+      await inviteTechnician(
+        {
+          body: { full_name: 'New Tech', email: 'new@test.com' },
+          user: adminUser,
+        },
+        res,
+        vi.fn()
+      );
+
+      expect(deleteChain.delete).toHaveBeenCalled();
+      expect(deleteChain.eq).toHaveBeenCalledWith('id', 'tech-new');
+      expect(mockDeleteUser).toHaveBeenCalledWith('auth-user-1');
+      expect(res.status).toHaveBeenCalledWith(502);
+    });
   });
 
   describe('updateTechnician', () => {
