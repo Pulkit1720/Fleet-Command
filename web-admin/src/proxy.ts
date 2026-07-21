@@ -29,20 +29,46 @@ export async function proxy(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const { pathname } = request.nextUrl;
+
+    // Pages reachable without a session (auth entry points + account setup).
     const isPublicPath =
         pathname === '/login' ||
         pathname === '/signup' ||
+        pathname === '/register' ||
         pathname === '/set-password' ||
         pathname === '/technician/setup' ||
         pathname.startsWith('/auth/');
 
-    if (!user && !isPublicPath) {
+    if (!user) {
+        if (isPublicPath) return supabaseResponse;
         const url = request.nextUrl.clone();
         url.pathname = '/login';
         return NextResponse.redirect(url);
     }
 
-    if (user && pathname === '/login') {
+    // RBAC: the admin dashboard is admin-only. Technicians use the mobile app,
+    // so a technician who ends up with a web session must not reach the panel.
+    const role = user.user_metadata?.role ?? user.app_metadata?.role;
+    const isAdmin = role === 'admin';
+
+    if (!isAdmin) {
+        // Account-setup pages stay reachable; everything else is off-limits.
+        if (isPublicPath) return supabaseResponse;
+
+        // Clear the session and bounce to login so there's no redirect loop.
+        await supabase.auth.signOut();
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        url.search = '?error=not_authorized';
+        const redirect = NextResponse.redirect(url);
+        for (const cookie of request.cookies.getAll()) {
+            if (cookie.name.startsWith('sb-')) redirect.cookies.delete(cookie.name);
+        }
+        return redirect;
+    }
+
+    // Signed-in admins shouldn't sit on the auth entry pages.
+    if (pathname === '/login' || pathname === '/signup') {
         const url = request.nextUrl.clone();
         url.pathname = '/';
         return NextResponse.redirect(url);

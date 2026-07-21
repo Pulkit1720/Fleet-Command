@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -30,6 +30,17 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+    // Surface messages passed via ?error= (e.g. a technician bounced from the
+    // admin panel). Read client-side so the page stays statically rendered.
+    useEffect(() => {
+        const reason = new URLSearchParams(window.location.search).get('error');
+        if (reason === 'not_authorized') {
+            setError('That account is a technician login. Please use the Fleet Coordinate mobile app.');
+        } else if (reason) {
+            setError(decodeURIComponent(reason));
+        }
+    }, []);
 
     const signIn = async (signInEmail: string, signInPassword: string) => {
         setError('');

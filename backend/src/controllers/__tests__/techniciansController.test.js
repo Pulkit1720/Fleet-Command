@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockFrom, mockGenerateLink, mockSendInvite, mockDeleteUser } = vi.hoisted(() => ({
+const { mockFrom, mockCreateUser, mockSendInvite, mockDeleteUser } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
-  mockGenerateLink: vi.fn(),
+  mockCreateUser: vi.fn(),
   mockSendInvite: vi.fn(),
   mockDeleteUser: vi.fn(),
 }));
@@ -12,7 +12,7 @@ vi.mock('../../config/supabase.js', () => ({
     from: (...args) => mockFrom(...args),
     auth: {
       admin: {
-        generateLink: (...args) => mockGenerateLink(...args),
+        createUser: (...args) => mockCreateUser(...args),
         deleteUser: (...args) => mockDeleteUser(...args),
       },
     },
@@ -248,11 +248,8 @@ describe('techniciansController', () => {
           error: null,
         });
       });
-      mockGenerateLink.mockResolvedValue({
-        data: {
-          user: { id: 'auth-user-1' },
-          properties: { action_link: 'https://supabase.test/verify?token_hash=abc&type=invite' },
-        },
+      mockCreateUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-1' } },
         error: null,
       });
       mockSendInvite.mockResolvedValue();
@@ -273,14 +270,11 @@ describe('techniciansController', () => {
         next
       );
 
-      expect(mockGenerateLink).toHaveBeenCalledWith(
+      expect(mockCreateUser).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'invite',
           email: 'new@test.com',
-          options: expect.objectContaining({
-            data: { full_name: 'New Tech', role: 'technician' },
-            redirectTo: 'http://localhost:3000/auth/confirm',
-          }),
+          email_confirm: true,
+          user_metadata: { full_name: 'New Tech', role: 'technician' },
         })
       );
       expect(mockSendInvite).toHaveBeenCalledWith(
@@ -288,7 +282,7 @@ describe('techniciansController', () => {
           to: 'new@test.com',
           full_name: 'New Tech',
           inviterName: 'Dana Admin',
-          inviteUrl: 'https://supabase.test/verify?token_hash=abc&type=invite',
+          inviteUrl: expect.stringContaining('http://localhost:3000/register?token='),
         })
       );
       expect(res.status).toHaveBeenCalledWith(201);
@@ -307,11 +301,8 @@ describe('techniciansController', () => {
         }
         return deleteChain;
       });
-      mockGenerateLink.mockResolvedValue({
-        data: {
-          user: { id: 'auth-user-1' },
-          properties: { action_link: 'https://supabase.test/invite' },
-        },
+      mockCreateUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-1' } },
         error: null,
       });
       mockSendInvite.mockRejectedValue(new Error('Invalid login: 535 5.7.8'));

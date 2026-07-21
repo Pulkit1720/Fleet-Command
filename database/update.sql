@@ -185,3 +185,19 @@ CREATE INDEX IF NOT EXISTS idx_client_created_by ON public.client(created_by);
 -- ============================================================
 
 ALTER TABLE public.technicians ALTER COLUMN phone DROP NOT NULL;
+
+
+-- ============================================================
+-- 2026-07-21 – Technician invite tokens (token-based /register flow)
+-- (Applied live via Supabase migration "technician_invite_tokens".)
+-- Replaces the fragile Supabase magic-link with our own single-use,
+-- hashed invite token validated by the /register page.
+-- ============================================================
+
+ALTER TABLE public.technicians
+    ADD COLUMN IF NOT EXISTS invite_token_hash text,
+    ADD COLUMN IF NOT EXISTS invite_token_expires_at timestamptz,
+    ADD COLUMN IF NOT EXISTS invite_accepted_at timestamptz;
+
+CREATE INDEX IF NOT EXISTS technicians_invite_token_hash_idx
+    ON public.technicians (invite_token_hash);

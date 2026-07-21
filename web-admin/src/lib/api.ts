@@ -43,6 +43,22 @@ export async function signupAdmin(data: {
   });
 }
 
+export async function getInvite(
+  token: string
+): Promise<{ full_name: string; email: string }> {
+  return fetchApi(`/auth/invite/${encodeURIComponent(token)}`);
+}
+
+export async function registerTechnician(
+  token: string,
+  password: string
+): Promise<{ ok: boolean }> {
+  return fetchApi('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
 // Jobs API
 export async function getJobs(params?: {
   status?: string;

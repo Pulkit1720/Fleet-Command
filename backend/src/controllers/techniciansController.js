@@ -1,6 +1,7 @@
 import supabase from '../config/supabase.js';
 import { calculateDistance } from '../services/truthEngineService.js';
 import { sendTechnicianInvite } from '../services/emailService.js';
+import { generateInviteToken } from '../services/inviteTokenService.js';
 
 // Public demo account (credentials are intentionally public on the login page)
 const DEMO_ADMIN_EMAIL = 'demo@fleetcd.com';
@@ -116,37 +117,57 @@ export async function inviteTechnician(req, res, next) {
       req.user?.email ||
       null;
 
-    // generateLink creates the auth user and mints the invite action link WITHOUT
-    // sending an email — we send it ourselves via SMTP so we control the sender
-    // domain, branding, and personalization.
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: 'invite',
-      email,
-      options: {
-        data: { full_name, role: 'technician' },
-        redirectTo: `${webAdminUrl}/auth/confirm`,
-      },
-    });
+    // Create the auth user with a confirmed email but no password yet — the
+    // technician sets their own password on the /register page. We deliberately
+    // avoid Supabase magic links: those are single-use, so email-security
+    // scanners that pre-fetch links consume the token before the human clicks.
+    const { data: created, error: createError } =
+      await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        user_metadata: { full_name, role: 'technician' },
+      });
 
-    if (linkError) throw linkError;
+    if (createError) {
+      const alreadyExists =
+        createError.status === 422 ||
+        /already.*registered|already.*exists/i.test(createError.message || '');
+      if (alreadyExists) {
+        return res
+          .status(409)
+          .json({ error: 'A technician with this email already exists' });
+      }
+      throw createError;
+    }
 
-    const inviteUrl = linkData?.properties?.action_link;
+    const userId = created.user?.id;
+
+    // Our own invite token (only the hash is stored). The /register page
+    // validates it read-only, so a scanner hitting the link can't burn it.
+    const { token, hash, expiresAt } = generateInviteToken();
+    const inviteUrl = `${webAdminUrl}/register?token=${token}`;
 
     // Create technician record linked to the new auth user, owned by this admin
     const { data: technician, error: techError } = await supabase
       .from('technicians')
       .insert({
-        user_id: linkData.user?.id,
+        user_id: userId,
         admin_id: req.user.id,
         full_name,
         email,
         phone: phone || null,
         is_active: true,
+        invite_token_hash: hash,
+        invite_token_expires_at: expiresAt,
       })
       .select()
       .single();
 
-    if (techError) throw techError;
+    if (techError) {
+      // Don't leave an orphaned auth user if the row insert fails
+      if (userId) await supabase.auth.admin.deleteUser(userId);
+      throw techError;
+    }
 
     // Deliver the invite. If email fails, roll back the half-created technician
     // and auth user so the admin can simply retry once email works again —
@@ -155,8 +176,8 @@ export async function inviteTechnician(req, res, next) {
       await sendTechnicianInvite({ to: email, full_name, inviterName, inviteUrl });
     } catch (emailError) {
       await supabase.from('technicians').delete().eq('id', technician.id);
-      if (linkData.user?.id) {
-        await supabase.auth.admin.deleteUser(linkData.user.id);
+      if (userId) {
+        await supabase.auth.admin.deleteUser(userId);
       }
       console.error(
         `Invite email to ${email} failed, rolled back technician ${technician.id}:`,
